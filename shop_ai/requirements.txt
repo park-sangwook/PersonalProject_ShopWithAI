@@ -1,0 +1,17 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+
+# AI & Machine Learning
+#lightfm
+scikit-learn
+pandas
+numpy
+
+# Integration & Utilities
+pydantic
+requests
+python-multipart
+
+joblib
+pydantic
