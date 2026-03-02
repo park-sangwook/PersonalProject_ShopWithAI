@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="LOG_FILE_PATH" source="spring.log.file-path" defaultValue="./logs/app"/>
+
+    <property name="CONSOLE_LOG_PATTERN" value="%boldMagenta(%d{MM-dd HH:mm:ss}) [%boldYellow(%-5level)] %cyan(%logger{5}.%M) - %msg %n" />
+    <property name="FILE_LOG_PATTERN" value="%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %5level %logger - %msg%n" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE_PATH}/daily</file>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE_PATH}/app.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <maxHistory>90</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Mybatis용
+        <logger name="org.mybatis" level="DEBUG" />
+        <logger name="com.delivery.hub.dao" level="DEBUG"/>
+     -->
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false"><appender-ref ref="CONSOLE" /> </logger>
+
+    <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false"><appender-ref ref="CONSOLE" /></logger>
+
+    <root level="info">
+        <appender-ref ref="CONSOLE" /> <appender-ref ref="FILE" />    </root>
+</configuration>
