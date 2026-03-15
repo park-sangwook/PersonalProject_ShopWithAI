@@ -1,23 +1,47 @@
 // src/pages/LoginPage.tsx
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import apiClient from '@/api/client';
 
 const LoginPage: React.FC = () => {
-    const [email, setEmail] = useState('');
+    const [userId, setUserId] = useState('');
+    const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const from = location.state?.from || '/';
+
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email === 'admin@example.com') {
-            login({ name: 'Admin', role: 2 }, 'admin-fake-jwt-token');
-            alert('Admin login successful!');
-            navigate('/admin/dashboard');
-        } else {
-            login({ name: 'User', role: 1 }, 'user-fake-jwt-token');
-            alert('Login successful!');
-            navigate('/');
+        try {
+            const response = await apiClient.post('/api/user/login', {
+                id: userId,
+                password
+            });
+
+            const apiResponse = response.data;
+            if (apiResponse) {
+                const { accessToken, user, role } = apiResponse;
+                const actualRole = user?.role ?? role ?? 1;
+                const actualUser = user || { name: userId, role: actualRole };
+
+                if (accessToken) {
+                    login(actualUser, accessToken);
+                    alert('Login successful!');
+
+                    if (actualRole === 2) {
+                        navigate('/admin/dashboard');
+                    } else {
+                        navigate(from);
+                    }
+                } else {
+                    alert('Access token not found in response.');
+                }
+            }
+        } catch (error) {
+            console.error('Login failed:', error);
         }
     };
 
@@ -30,22 +54,30 @@ const LoginPage: React.FC = () => {
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">Email address</label>
+              <label htmlFor="user-id" className="sr-only">ID</label>
               <input 
-                id="email-address" 
-                type="email" 
-                autoComplete="email" 
+                id="user-id" 
+                type="text" 
+                autoComplete="username" 
                 required 
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
               />
-               <p className="mt-2 text-xs text-gray-500">Use <b>admin@example.com</b> for admin access.</p>
             </div>
             <div>
               <label htmlFor="password" className="sr-only">Password</label>
-              <input id="password" type="password" autoComplete="current-password" required className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password" />
+              <input 
+                id="password" 
+                type="password" 
+                autoComplete="current-password" 
+                required 
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                placeholder="Password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
           </div>
           <div>
@@ -57,7 +89,7 @@ const LoginPage: React.FC = () => {
         <p className="text-center text-sm text-gray-600">
           Not a member?{' '}
           <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Start a 14 day free trial
+            Create an account
           </Link>
         </p>
       </div>

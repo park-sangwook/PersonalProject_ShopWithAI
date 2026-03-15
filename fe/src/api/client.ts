@@ -74,10 +74,11 @@ apiClient.interceptors.response.use(
   (error) => {
     // 2. HTTP 에러(400, 500번대 등) 발생 시 처리
     let errorMsg = '서버와의 통신 중 오류가 발생했습니다.';
+    console.log(error.response.data);
 
-    if (error.response && error.response.data && error.response.data.errorMessage) {
+    if (error.response.data.errorMessage) {
       // 백엔드에서 보낸 customErrorMessage가 있는 경우 해당 메시지 사용
-      errorMsg = error.response.data.customErrorMessage;
+      errorMsg = error.response.data.errorMessage;
     } else if (error.message === 'Session expired') {
 		// 세션 만료로 인한 요청 취소는 별도 팝업을 띄우지 않음
 		return Promise.reject(error);
