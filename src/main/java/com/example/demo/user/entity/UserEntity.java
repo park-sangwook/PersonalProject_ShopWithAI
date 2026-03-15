@@ -1,10 +1,7 @@
 package com.example.demo.user.entity;
 
 import com.example.demo.user.vo.UserVO;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -16,6 +13,9 @@ import lombok.*;
 @Getter
 public class UserEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long seq;
+
     @NotNull
     private String id;
 

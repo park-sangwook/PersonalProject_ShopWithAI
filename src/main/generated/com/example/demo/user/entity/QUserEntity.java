@@ -25,6 +25,8 @@ public class QUserEntity extends EntityPathBase<UserEntity> {
 
     public final StringPath role = createString("role");
 
+    public final NumberPath<Long> seq = createNumber("seq", Long.class);
+
     public QUserEntity(String variable) {
         super(UserEntity.class, forVariable(variable));
     }

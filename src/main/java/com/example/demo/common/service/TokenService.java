@@ -13,28 +13,31 @@ import java.util.Date;
 @Service
 public class TokenService {
 
-    private final Key TOKENKEY = Keys.hmacShaKeyFor(EnviromentService.get("jwt-key").getBytes());
+    private final Key KEY_TOKEN = Keys.hmacShaKeyFor(EnviromentService.get("jwt-key").getBytes());
 
+    // 유효 시간 설정 (밀리초 단위)
     private final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30; // 30분
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7; // 7일
 
-    public String create(UserVO vo, long expiration){
-        return Jwts.builder().setSubject(vo.getId()).claim("role",vo.getRole()).signWith(TOKENKEY, SignatureAlgorithm.HS256)
-                .setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis()+expiration)).compact();
-    }
-
-    public UserVO getUserFromToken(String token){
-        Claims claims = Jwts.parserBuilder().setSigningKey(TOKENKEY).build().parseClaimsJwt(token).getBody();
-        return UserVO.builder().id(claims.getSubject()).role(claims.get("role").toString()).build();
+    public String create(UserVO vo,long expiration){
+        return Jwts.builder().setIssuedAt(new Date()).setSubject(vo.getId()).claim("role",vo.getRole())
+                .setExpiration(new Date(System.currentTimeMillis()+expiration))
+                .signWith(KEY_TOKEN, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String createAccessToken(UserVO vo){return create(vo,ACCESS_TOKEN_EXPIRE_TIME);}
     public String createRefreshToken(UserVO vo){return create(vo,REFRESH_TOKEN_EXPIRE_TIME);}
 
-    public boolean validate(String token){
+    public UserVO getUserFromToken(String token){
+        Claims claims = Jwts.parserBuilder().setSigningKey(KEY_TOKEN).build().parseClaimsJws(token).getBody();
+        return UserVO.builder().id(claims.getSubject()).role(claims.get("role").toString()).build();
+    }
+
+    public boolean validateToken(String token){
         try{
-            Jwts.parserBuilder().setSigningKey(TOKENKEY).build().parseClaimsJwt(token);
+            Jwts.parserBuilder().setSigningKey(KEY_TOKEN).build().parseClaimsJwt(token);
             return true;
-        }catch(Exception e) {return false;}
+        }catch (Exception e){return false;}
     }
 }

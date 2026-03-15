@@ -12,6 +12,6 @@ public class EnviromentService {
         bean.setResources(new ClassPathResource("application.yml"));
 
         Properties prop = bean.getObject();
-        return prop.getProperty("shop."+name,"do not have name");
+        return prop.getProperty("shop."+name,"do not have "+name);
     }
 }
