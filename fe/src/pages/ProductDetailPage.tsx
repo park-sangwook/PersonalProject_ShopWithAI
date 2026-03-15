@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import apiClient from '@/api/client';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -8,6 +10,55 @@ const ProductDetailPage: React.FC = () => {
   const location = useLocation();
   const { isLoggedIn } = useAuth();
   const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('details');
+
+  // useQuery를 사용하여 상품 상세 정보 페칭 (캐싱 적용)
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get(`/api/product/${id}`);
+        return response.data;
+      } catch (err) {
+        console.warn('API fetch failed, using fallback mock data');
+        return {
+          id: id || '1',
+          name: '프리미엄 코튼 오버핏 셔츠',
+          price: 50000,
+          rating: 4.8,
+          reviewCount: 128,
+          description: '최고급 원단으로 제작되어 부드럽고 착용감이 뛰어납니다. 어떤 스타일에도 잘 어울리는 클래식한 디자인입니다.',
+          images: [
+            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Front',
+            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Side',
+            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Back',
+            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Detail',
+          ],
+          detailedImages: [
+            'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+1',
+            'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+2',
+            'https://via.placeholder.com/1000x1200/f8fafc/94a3b8?text=Product+Detail+3',
+          ],
+          reviews: [
+            { id: 1, author: '김**', date: '2026-03-12', rating: 5, content: '핏이 정말 예뻐요! 재질도 부드럽고 한 여름 빼고는 다 입을 수 있을 것 같습니다. 다른 색상도 구매할 예정입니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review1' },
+            { id: 2, author: '이**', date: '2026-03-10', rating: 4, content: '배송이 하루만에 와서 좋았어요. 약간 구김이 가긴 하는데 다림질하면 괜찮습니다. 가성비 최고네요.', image: null },
+            { id: 3, author: '박**', date: '2026-03-05', rating: 5, content: '사이즈 고민 많았는데 정사이즈로 가니 딱 맞네요. 어깨 라인이 예쁘게 떨어져서 체형 보정도 됩니다. 만족합니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review2' },
+          ]
+        };
+      }
+    },
+  });
+
+  const [mainImage, setMainImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (product?.images?.length > 0) {
+      setMainImage(product.images[0]);
+    }
+  }, [product]);
+
+  if (isLoading) return <div className="text-center py-20 text-gray-500">Loading product details...</div>;
+  if (error || !product) return <div className="text-center py-20 text-red-500">Failed to load product.</div>;
 
   const handleAuthAction = (actionName: string) => {
     if (!isLoggedIn) {
@@ -17,7 +68,6 @@ const ProductDetailPage: React.FC = () => {
       return;
     }
     
-    // 로그인 상태일 때 해당 페이지로 이동
     if (actionName === '바로 구매하기') {
       navigate('/checkout');
     } else if (actionName === '리뷰 작성하기') {
@@ -28,34 +78,6 @@ const ProductDetailPage: React.FC = () => {
       alert('장바구니에 상품이 담겼습니다.');
     }
   };
-  const [activeTab, setActiveTab] = useState('details'); // details, reviews, qna
-
-  const product = {
-    id: id || '1',
-    name: '프리미엄 코튼 오버핏 셔츠',
-    price: 50000,
-    rating: 4.8,
-    reviewCount: 128,
-    description: '최고급 원단으로 제작되어 부드럽고 착용감이 뛰어납니다. 어떤 스타일에도 잘 어울리는 클래식한 디자인입니다.',
-    images: [
-      'https://via.placeholder.com/600x750/e2e8f0/475569?text=Front',
-      'https://via.placeholder.com/600x750/e2e8f0/475569?text=Side',
-      'https://via.placeholder.com/600x750/e2e8f0/475569?text=Back',
-      'https://via.placeholder.com/600x750/e2e8f0/475569?text=Detail',
-    ],
-    detailedImages: [
-      'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+1',
-      'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+2',
-      'https://via.placeholder.com/1000x1200/f8fafc/94a3b8?text=Product+Detail+3',
-    ],
-    reviews: [
-      { id: 1, author: '김**', date: '2026-03-12', rating: 5, content: '핏이 정말 예뻐요! 재질도 부드럽고 한 여름 빼고는 다 입을 수 있을 것 같습니다. 다른 색상도 구매할 예정입니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review1' },
-      { id: 2, author: '이**', date: '2026-03-10', rating: 4, content: '배송이 하루만에 와서 좋았어요. 약간 구김이 가긴 하는데 다림질하면 괜찮습니다. 가성비 최고네요.', image: null },
-      { id: 3, author: '박**', date: '2026-03-05', rating: 5, content: '사이즈 고민 많았는데 정사이즈로 가니 딱 맞네요. 어깨 라인이 예쁘게 떨어져서 체형 보정도 됩니다. 만족합니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review2' },
-    ]
-  };
-
-  const [mainImage, setMainImage] = useState(product.images[0]);
 
   return (
     <div className="max-w-7xl mx-auto py-8">
@@ -65,7 +87,7 @@ const ProductDetailPage: React.FC = () => {
           {/* Images Gallery */}
           <div className="flex-1 flex gap-4">
             <div className="flex flex-col gap-3">
-              {product.images.map((img, index) => (
+              {product.images.map((img: string, index: number) => (
                 <img 
                   key={index} 
                   src={img} 
@@ -77,7 +99,7 @@ const ProductDetailPage: React.FC = () => {
               ))}
             </div>
             <div className="flex-1">
-              <img src={mainImage} alt={product.name} className="w-full h-[600px] object-cover rounded-lg" />
+              <img src={mainImage || ''} alt={product.name} className="w-full h-[600px] object-cover rounded-lg" />
             </div>
           </div>
 
@@ -179,7 +201,7 @@ const ProductDetailPage: React.FC = () => {
                   오랜 시간 착용해도 형태가 잘 유지됩니다.
                 </p>
               </div>
-              {product.detailedImages.map((img, idx) => (
+              {product.detailedImages.map((img: string, idx: number) => (
                 <img key={idx} src={img} alt={`Detail ${idx + 1}`} className="w-full max-w-4xl rounded-lg shadow-sm" />
               ))}
               
@@ -233,7 +255,7 @@ const ProductDetailPage: React.FC = () => {
               </div>
 
               <div className="space-y-8">
-                {product.reviews.map(review => (
+                {product.reviews.map((review: any) => (
                   <div key={review.id} className="border-b border-gray-100 pb-8 last:border-0">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -262,7 +284,6 @@ const ProductDetailPage: React.FC = () => {
                 ))}
               </div>
               
-              {/* Pagination (Mock) */}
               <div className="flex justify-center gap-2 mt-10">
                 <button className="w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-50">&lt;</button>
                 <button className="w-10 h-10 bg-gray-900 text-white rounded-md flex items-center justify-center font-medium">1</button>

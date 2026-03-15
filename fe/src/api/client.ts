@@ -26,7 +26,10 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    const isUserApi = config.url && config.url.startsWith('/api/user');
+    const userPaths = ['/api/user', '/api/product', '/api/auth'];
+
+    // 배열 중 하나라도 조건(startsWith)에 맞으면 true 반환
+    const isUserApi = config.url && userPaths.some(path => config.url.startsWith(path));
     const isHealthCheckApi = config.url === '/api/comm/health-check';
 
     if (isUserApi || isHealthCheckApi) {

@@ -1,6 +1,8 @@
 // src/pages/MainPage.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/api/client';
 
 // ProductCard 컴포넌트를 분리하여 재사용성을 높입니다.
 const ProductCard: React.FC<{ product: any }> = ({ product }) => (
@@ -9,7 +11,9 @@ const ProductCard: React.FC<{ product: any }> = ({ product }) => (
       <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
       <div className="p-4 bg-white">
         <h3 className="text-md font-semibold text-gray-800 truncate">{product.name}</h3>
-        <p className="text-gray-600 font-bold mt-1">{product.price}</p>
+        <p className="text-gray-600 font-bold mt-1">
+          {typeof product.price === 'number' ? `₩${product.price.toLocaleString()}` : product.price}
+        </p>
       </div>
     </div>
   </Link>
@@ -17,13 +21,17 @@ const ProductCard: React.FC<{ product: any }> = ({ product }) => (
 
 
 const MainPage: React.FC = () => {
-  // 섹션별 샘플 데이터
-  const featuredProducts = [
-    { id: 1, name: '프리미엄 코튼 셔츠', price: '₩55,000', image: 'https://via.placeholder.com/300x300/EBF4FF/86A8E7?text=Featured+1' },
-    { id: 2, name: '슬림핏 데님 팬츠', price: '₩72,000', image: 'https://via.placeholder.com/300x300/EBF4FF/86A8E7?text=Featured+2' },
-    { id: 3, name: '클래식 레더 슈즈', price: '₩125,000', image: 'https://via.placeholder.com/300x300/EBF4FF/86A8E7?text=Featured+3' },
-    { id: 4, name: '미니멀리스트 백팩', price: '₩89,000', image: 'https://via.placeholder.com/300x300/EBF4FF/86A8E7?text=Featured+4' },
-  ];
+  // TanStack Query의 useQuery를 사용하여 데이터 페칭 및 캐싱 적용
+  const { data: featuredProducts = [], isLoading, error } = useQuery({
+    queryKey: ['featuredProducts'],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/product/recommend');
+      return response.data || [];
+    },
+    staleTime: 1000 * 60 * 5, // 1️⃣ 5분 동안은 데이터를 '신선'하다고 간주 (페이지 이동 시 재호출 방지)
+    gcTime: 1000 * 60 * 10,    // 2️⃣ 컴포넌트가 없어져도 10분 동안은 메모리에 데이터를 보관
+    refetchOnWindowFocus: false,
+  });
 
   const newArrivals = [
     { id: 5, name: '오버사이즈 니트 스웨터', price: '₩68,000', image: 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=New+1' },
@@ -31,6 +39,9 @@ const MainPage: React.FC = () => {
     { id: 7, name: '캔버스 스니커즈', price: '₩49,000', image: 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=New+3' },
     { id: 8, name: '캐시미어 머플러', price: '₩99,000', image: 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=New+4' },
   ];
+
+  if (isLoading) return <div className="text-center py-20 text-gray-500">Loading recommendations...</div>;
+  if (error) return <div className="text-center py-20 text-red-500">Failed to load recommendations.</div>;
 
   return (
     <div className="space-y-12">

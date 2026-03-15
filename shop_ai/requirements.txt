@@ -15,3 +15,6 @@ python-multipart
 
 joblib
 pydantic
+
+pymysql
+sqlalchemy

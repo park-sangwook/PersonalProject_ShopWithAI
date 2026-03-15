@@ -3,33 +3,62 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import joblib
 import os
+# DB 연결 설정을 가져옵니다.
+from db_connect import get_db_data
 
-# 1. 상품 데이터 준비 (실제로는 DB에서 가져온 데이터)
-# '청자켓'과 유사한 키워드를 가진 상품들이 추천되도록 구성했습니다.
-items = [
-    {"id": 1, "name": "데님 빈티지 청자켓", "desc": "봄 가을 입기 좋은 데님 자켓"},
-    {"id": 2, "name": "슬림핏 청바지", "desc": "편안한 스트레치 데님 팬츠"},
-    {"id": 3, "name": "오버핏 연청 자켓", "desc": "트렌디한 루즈핏 청자켓"},
-    {"id": 4, "name": "가죽 라이더 자켓", "desc": "세련된 블랙 가죽 아우터"},
-    {"id": 5, "name": "여름용 반팔 티셔츠", "desc": "시원한 면 소재 기본 티"},
-    {"id": 6, "name": "워싱 데님 자켓", "desc": "빈티지한 느낌의 청자켓 아우터"}
-]
-df = pd.DataFrame(items)
+@app.get("/train", response_model=RecommendResponse)
+def run_training():
+    # 1. DB에서 상품 데이터 및 카테고리명을 JOIN해서 가져오기
+    query = """
+        SELECT 
+            p.id, 
+            p.name, 
+            p.detail,
+            c1.code_name AS cat_large,
+            c2.code_name AS cat_small
+        FROM product p
+        LEFT JOIN category_code c1 ON p.category_l = c1.code_id
+        LEFT JOIN category_code c2 ON p.category_s = c2.code_id
+    """
+    df = get_db_data(query)
 
-# 2. 텍스트 데이터 분석 (이름과 설명을 합쳐서 분석)
-df['features'] = df['name'] + " " + df['desc']
-tfidf = TfidfVectorizer()
-tfidf_matrix = tfidf.fit_transform(df['features'])
+    if df is None or df.empty:
+        print("❌ 학습할 데이터가 DB에 없습니다.")
+        return
 
-# 3. 상품 간의 유사도(코사인 유사도) 계산
-cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    # 2. 데이터 전처리 (NULL 값 처리)
+    # 텍스트 데이터가 NULL이면 학습 시 오류가 나므로 빈 문자열로 채워줍니다.
+    df['name'] = df['name'].fillna('')
+    df['detail'] = df['detail'].fillna('')
+    df['cat_large'] = df['cat_large'].fillna('')
+    df['cat_small'] = df['cat_small'].fillna('')
 
-# 4. 모델 및 데이터 저장
-if not os.path.exists('model'):
-    os.makedirs('model')
+    # 3. 학습용 통합 특징(Features) 생성
+    # 카테고리 정보와 상품명, 상세 설명을 모두 합쳐서 분석합니다.
+    df['features'] = (
+        df['cat_large'] + " " + 
+        df['cat_small'] + " " + 
+        df['name'] + " " + 
+        df['detail']
+    )
 
-# 나중에 API에서 써야 하므로 유사도 행렬과 상품 정보를 저장합니다.
-joblib.dump(cosine_sim, "model/cosine_sim.joblib")
-joblib.dump(df, "model/items_df.joblib")
+    # 4. TF-IDF 및 유사도 계산
+    # stop_words='english' 옵션은 영어 불용어를 제거해주며, 한글은 기본 분석됩니다.
+    tfidf = TfidfVectorizer()
+    tfidf_matrix = tfidf.fit_transform(df['features'])
+    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-print("학습 완료! 상품 유사도 모델이 저장되었습니다.")
+    # 5. 모델 저장 폴더 생성
+    if not os.path.exists('model'):
+        os.makedirs('model')
+
+    # 6. 결과 저장
+    # cosine_sim: 유사도 행렬
+    # df: 나중에 ID로 상품 정보를 찾기 위한 데이터프레임
+    joblib.dump(cosine_sim, "model/cosine_sim.joblib")
+    joblib.dump(df, "model/items_df.joblib")
+
+    print(f"✅ 학습 완료! 총 {len(df)}개의 상품 정보가 'model/' 폴더에 저장되었습니다.")
+
+if __name__ == "__main__":
+    run_training()

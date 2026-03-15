@@ -23,4 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
+# --- Python (API) ---
 venv/
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+model/
