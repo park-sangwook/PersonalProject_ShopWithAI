@@ -17,8 +17,9 @@ import java.util.List;
 public class RecommendationService {
 
     private final ProductService productService;
-    public List<ProductResponse> getRecommendations(Long productId) {
+    public List<ProductResponse> getRecommendations() {
         RestTemplate restTemplate = new RestTemplate();
+        long productId = 1;
         String fastapiUrl = "http://localhost:8000/recommend/" + productId;
 
         log.info("파이썬 추천 서비스 시작 : {}",productId);
@@ -37,7 +38,7 @@ public class RecommendationService {
 
         } catch (Exception e) {
             // 파이썬 서버가 꺼져있거나 에러 발생 시 빈 리스트 반환 (서비스 중단 방지)
-            log.info("파이썬 에러 : {}",e.getStackTrace());
+            log.info("파이썬 에러 : {}", (Object) e.getStackTrace());
             return Collections.emptyList();
         }
     }

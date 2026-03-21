@@ -48,7 +48,7 @@ public class UserService {
                 throw new CustomException("해당 아이디는 이미 존재합니다.");
             }
         }catch(Exception e){
-            log.info("회원가입 에러 : {}",e.getStackTrace());
+            log.info("회원가입 에러 : {}", (Object) e.getStackTrace());
             throw new CustomException("회원가입에 실패하였습니다.");
         }
     }

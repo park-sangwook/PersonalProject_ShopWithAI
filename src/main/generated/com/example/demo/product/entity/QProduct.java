@@ -22,13 +22,13 @@ public class QProduct extends EntityPathBase<Product> {
 
     public static final QProduct product = new QProduct("product");
 
-    public final QCategoryCode categoryLarge;
+    public final com.example.demo.category.entity.QCategoryEntity categoryLarge;
 
-    public final QCategoryCode categorySmall;
+    public final com.example.demo.category.entity.QCategoryEntity categorySmall;
 
     public final StringPath colors = createString("colors");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    public final DateTimePath<java.util.Date> createdAt = createDateTime("createdAt", java.util.Date.class);
 
     public final StringPath detail = createString("detail");
 
@@ -36,9 +36,9 @@ public class QProduct extends EntityPathBase<Product> {
 
     public final StringPath name = createString("name");
 
-    public final NumberPath<java.math.BigDecimal> price = createNumber("price", java.math.BigDecimal.class);
+    public final NumberPath<Integer> price = createNumber("price", Integer.class);
 
-    public final NumberPath<java.math.BigDecimal> rating = createNumber("rating", java.math.BigDecimal.class);
+    public final NumberPath<Double> rating = createNumber("rating", Double.class);
 
     public final StringPath sizes = createString("sizes");
 
@@ -60,8 +60,8 @@ public class QProduct extends EntityPathBase<Product> {
 
     public QProduct(Class<? extends Product> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.categoryLarge = inits.isInitialized("categoryLarge") ? new QCategoryCode(forProperty("categoryLarge"), inits.get("categoryLarge")) : null;
-        this.categorySmall = inits.isInitialized("categorySmall") ? new QCategoryCode(forProperty("categorySmall"), inits.get("categorySmall")) : null;
+        this.categoryLarge = inits.isInitialized("categoryLarge") ? new com.example.demo.category.entity.QCategoryEntity(forProperty("categoryLarge"), inits.get("categoryLarge")) : null;
+        this.categorySmall = inits.isInitialized("categorySmall") ? new com.example.demo.category.entity.QCategoryEntity(forProperty("categorySmall"), inits.get("categorySmall")) : null;
     }
 
 }
