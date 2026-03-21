@@ -1,5 +1,7 @@
 // src/App.tsx
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/api/client';
 import MainPage from '@/pages/MainPage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
@@ -26,6 +28,14 @@ function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/category/category_l');
+      return response.data || [];
+    },
+  });
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800">
       {/* Global Header */}
@@ -39,9 +49,11 @@ function App() {
                 <div className="relative group mx-2">
                   <button className="text-gray-600 hover:text-blue-600 transition-colors">Categories</button>
                   <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 invisible group-hover:visible z-20">
-                    <Link to="/category/apparel" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Apparel</Link>
-                    <Link to="/category/shoes" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Shoes</Link>
-                    <Link to="/category/accessories" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Accessories</Link>
+                    {categories.map((category: any) => (
+                      <Link key={category.code_id} to={`/category/${category.code_id}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        {category.code_name}
+                      </Link>
+                    ))}
                   </div>
                 </div>
                 <div className="w-full max-w-sm">
@@ -93,7 +105,7 @@ function App() {
           <Route path="/write-review/:id" element={<WriteReviewPage />} />
           <Route path="/write-qna/:id" element={<WriteQnaPage />} />
           <Route path="/qna" element={<QnaBoardPage />} />
-          <Route path="/category/:name" element={<MainPage />} />
+          <Route path="/category/:categoryId" element={<MainPage />} />
 
           {/* Admin Routes (Integrated) */}
           <Route path="/admin" element={<AdminRoute />}>

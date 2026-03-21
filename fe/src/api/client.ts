@@ -26,7 +26,7 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    const userPaths = ['/api/user', '/api/product', '/api/auth'];
+    const userPaths = ['/api/user', '/api/product', '/api/auth','/api/category'];
 
     // 배열 중 하나라도 조건(startsWith)에 맞으면 true 반환
     const isUserApi = config.url && userPaths.some(path => config.url.startsWith(path));
@@ -67,7 +67,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     // 1. HTTP 상태 코드가 200번대여도 비즈니스 로직상 'FAILED'인 경우 처리
-    if (response.data && response.data.result === 'FAILED') {
+    if (response && response.data.result === 'FAILED') {
       const errorMsg = response.data.errorMessage || '알 수 없는 오류가 발생했습니다.';
       alert(errorMsg);
       return Promise.reject(new Error(errorMsg));
