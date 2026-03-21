@@ -1,34 +1,51 @@
 // src/pages/MainPage.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/api/client';
 
-// ProductCard 컴포넌트를 분리하여 재사용성을 높입니다.
 const ProductCard: React.FC<{ product: any }> = ({ product }) => (
-  <Link to={`/product/${product.id || product.productId || product.code_id}`} className="group block">
-    <div className="overflow-hidden rounded-lg border border-gray-200 group-hover:shadow-xl transition-shadow duration-300">
-      <img src={product.image || 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=Product'} alt={product.name || product.productName} className="w-full h-56 object-cover" />
-      <div className="p-4 bg-white">
-        <h3 className="text-md font-semibold text-gray-800 truncate">{product.name || product.productName}</h3>
-        <p className="text-gray-600 font-bold mt-1">
+  <Link to={`/product/${product.id || product.productId || product.code_id}`} className="group flex flex-col h-full bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+    <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+      <img 
+        src={product.image || 'https://via.placeholder.com/400x500/f8fafc/cbd5e1?text=Product'} 
+        alt={product.name || product.productName} 
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+      />
+      {product.isNew && (
+        <span className="absolute top-3 left-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">New</span>
+      )}
+    </div>
+    <div className="p-4 flex flex-col flex-grow">
+      <div className="mb-1 text-[11px] text-gray-400 font-semibold uppercase tracking-widest">
+        {product.categoryName || 'Collection'}
+      </div>
+      <h3 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+        {product.name || product.productName}
+      </h3>
+      <div className="mt-auto pt-2 border-t border-gray-50 flex items-center justify-between">
+        <p className="text-base font-bold text-gray-900">
           {typeof product.price === 'number' ? `₩${product.price.toLocaleString()}` : product.price}
         </p>
+        <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+        </div>
       </div>
     </div>
   </Link>
 );
 
 const MainPage: React.FC = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
+  const { categoryId, query } = useParams<{ categoryId: string; query: string }>();
+  const [sortBy, setSortBy] = useState('latest');
 
-  // 카테고리 목록을 조회하여 선택된 카테고리의 이름(code_name)을 찾습니다. (App.tsx에서 이미 캐싱됨)
+  // 카테고리 목록 조회
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const response = await apiClient.get('/api/category/category_l');
       let data = response.data || [];
-      if (data.data) data = data.data; // 응답 객체 구조 대비
+      if (data.data) data = data.data;
       return data;
     },
   });
@@ -36,16 +53,32 @@ const MainPage: React.FC = () => {
   const currentCategory = Array.isArray(categories) 
     ? categories.find((c: any) => String(c.code_id) === String(categoryId))
     : null;
-  const categoryName = currentCategory ? currentCategory.code_name : 'Category Products';
+  
+  const pageTitle = query 
+    ? `Search results for "${decodeURIComponent(query)}"` 
+    : (currentCategory ? currentCategory.code_name : 'Our Collection');
 
-  // Fetch category products if categoryId exists
-  const { data: categoryProducts = [], isLoading: isCategoryLoading, error: categoryError } = useQuery({
+  // 검색 결과 페칭
+  const { data: searchResults = [], isLoading: isSearchLoading } = useQuery({
+    queryKey: ['searchResults', query],
+    queryFn: async () => {
+      if (!query) return [];
+      const response = await apiClient.get(`/api/product/search/${query}`);
+      let data = response.data || [];
+      if (data.data) data = data.data;
+      if (data.products) data = data.products;
+      if (data.content) data = data.content;
+      return Array.isArray(data) ? data : (data ? [data] : []);
+    },
+    enabled: !!query,
+  });
+
+  // 카테고리 상품 페칭
+  const { data: categoryProducts = [], isLoading: isCategoryLoading } = useQuery({
     queryKey: ['categoryProducts', categoryId],
     queryFn: async () => {
       if (!categoryId) return [];
       const response = await apiClient.get(`/api/product/category/${categoryId}`);
-      
-      // API 응답 구조가 배열이 아닐 수 있으므로 (예: { data: [...] }, { content: [...] }) 안전하게 처리
       let products = [];
       if (Array.isArray(response.data)) {
         products = response.data;
@@ -55,16 +88,14 @@ const MainPage: React.FC = () => {
         products = response.data.products;
       } else if (response.data && Array.isArray(response.data.content)) {
         products = response.data.content;
-      } else if (response.data && typeof response.data === 'object') {
-        products = [response.data]; // 단일 객체일 경우 배열로 래핑
       }
       return products;
     },
     enabled: !!categoryId,
   });
 
-  // TanStack Query의 useQuery를 사용하여 추천 상품 데이터 페칭
-  const { data: featuredProducts = [], isLoading: isFeaturedLoading, error: featuredError } = useQuery({
+  // 추천 상품 데이터 페칭
+  const { data: featuredProducts = [], isLoading: isFeaturedLoading } = useQuery({
     queryKey: ['featuredProducts'],
     queryFn: async () => {
       const response = await apiClient.get('/api/product/recommend');
@@ -78,77 +109,199 @@ const MainPage: React.FC = () => {
       }
       return products;
     },
-    staleTime: 1000 * 60 * 50,
-    gcTime: 1000 * 60 * 10,
-    refetchOnWindowFocus: false,
-    enabled: !categoryId, // 카테고리 뷰가 아닐 때만 페칭
+    enabled: !categoryId && !query,
   });
 
-  const newArrivals = [
-    { id: 5, name: '오버사이즈 니트 스웨터', price: '₩68,000', image: 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=New+1' },
-    { id: 6, name: '코듀로이 와이드 팬츠', price: '₩75,000', image: 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=New+2' },
-    { id: 7, name: '캔버스 스니커즈', price: '₩49,000', image: 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=New+3' },
-    { id: 8, name: '캐시미어 머플러', price: '₩99,000', image: 'https://via.placeholder.com/300x300/FFFBEB/F9D423?text=New+4' },
-  ];
+  const productList = query ? searchResults : (categoryId ? categoryProducts : []);
+  const isLoading = isSearchLoading || isCategoryLoading;
 
-  if (categoryId) {
-    if (isCategoryLoading) return <div className="text-center py-20 text-gray-500">Loading products...</div>;
-    if (categoryError) return <div className="text-center py-20 text-red-500">Failed to load products.</div>;
-
-    const productList = Array.isArray(categoryProducts) ? categoryProducts : [];
-
+  if (categoryId || query) {
     return (
-      <div className="space-y-12">
-        <section>
-          {/* 변경점: Category Products 대신 카테고리 이름(code_name)을 표시합니다 */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">{categoryName}</h2>
-          {productList.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="flex flex-col md:flex-row gap-8 py-4">
+        {/* Sidebar */}
+        <aside className="w-full md:w-64 flex-shrink-0">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 sticky top-24">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">Categories</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link 
+                  to="/" 
+                  className={`text-sm transition-colors ${!categoryId ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                  All Products
+                </Link>
+              </li>
+              {categories.map((category: any) => (
+                <li key={category.code_id}>
+                  <Link 
+                    to={`/category/${category.code_id}`} 
+                    className={`text-sm transition-colors ${String(categoryId) === String(category.code_id) ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'}`}
+                  >
+                    {category.code_name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-10">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">Filters</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-gray-400 font-semibold uppercase tracking-wider block mb-2">Price Range</label>
+                  <div className="flex items-center gap-2">
+                    <input type="text" placeholder="Min" className="w-full px-3 py-2 text-xs border border-gray-100 rounded bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    <span className="text-gray-300">-</span>
+                    <input type="text" placeholder="Max" className="w-full px-3 py-2 text-xs border border-gray-100 rounded bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Product List Area */}
+        <div className="flex-grow">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+            <div>
+              <h2 className="text-2xl font-extrabold text-gray-900">{pageTitle}</h2>
+              <p className="text-sm text-gray-500 mt-1">{productList.length} products found</p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="text-sm border-none bg-white py-2 pl-3 pr-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="latest">Latest</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="popular">Popularity</option>
+              </select>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-200 aspect-[4/5] rounded-xl mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : productList.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {productList.map((product: any, idx: number) => (
                 <ProductCard key={product.id || product.productId || idx} product={product} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 text-gray-500">No products found in this category.</div>
+            <div className="bg-white rounded-2xl border border-dashed border-gray-200 py-20 text-center">
+              <div className="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">No products found</h3>
+              <p className="text-gray-500 mt-2">Try adjusting your filters or search criteria.</p>
+              <Link to="/" className="mt-6 inline-block bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition-colors">Clear all</Link>
+            </div>
           )}
-        </section>
+        </div>
       </div>
     );
   }
 
-  if (isFeaturedLoading) return <div className="text-center py-20 text-gray-500">Loading recommendations...</div>;
-  if (featuredError) return <div className="text-center py-20 text-red-500">Failed to load recommendations.</div>;
+  if (isFeaturedLoading) return (
+    <div className="py-20 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+  );
 
   return (
-    <div className="space-y-12">
-      {/* Hero Banner Section */}
-      <div className="relative bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-2xl overflow-hidden">
-        <div className="p-8 md:p-12 lg:p-16 text-center">
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">Spring Collection is Here!</h1>
-          <p className="mt-4 text-lg md:text-xl max-w-2xl mx-auto">
-            새로운 계절, 새로운 스타일. 지금 바로 봄 신상품을 만나보세요.
+    <div className="space-y-20 pb-20">
+      {/* Modern Hero Banner */}
+      <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl group">
+        <img 
+          src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" 
+          alt="Banner" 
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 text-center text-white px-4">
+          <span className="text-blue-400 font-bold tracking-[0.3em] uppercase text-sm mb-4">New Season 2026</span>
+          <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-6">REDEFINE YOUR STYLE</h1>
+          <p className="max-w-xl text-lg text-gray-200 mb-10 leading-relaxed font-light">
+            Experience the perfect blend of comfort and elegance with our curated spring collection.
           </p>
-          <Link to="/category/all" className="mt-8 inline-block bg-white text-blue-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-transform hover:scale-105">
-            Shop Now
-          </Link>
+          <div className="flex gap-4">
+            <Link to="/category/all" className="bg-white text-gray-900 font-bold py-4 px-10 rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300 transform hover:-translate-y-1">
+              Shop Collection
+            </Link>
+            <Link to="/qna" className="bg-white/10 backdrop-blur-md text-white border border-white/20 font-bold py-4 px-10 rounded-full hover:bg-white/20 transition-all duration-300">
+              Customer Center
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Featured Products Section */}
       <section>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Recommended for you</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {featuredProducts.map((product: any, idx: number) => (
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">FEATURED ITEMS</h2>
+            <div className="h-1.5 w-20 bg-blue-600 mt-2"></div>
+          </div>
+          <Link to="/category/all" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-2 group">
+            View All <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+          {featuredProducts.slice(0, 4).map((product: any, idx: number) => (
             <ProductCard key={product.id || product.productId || idx} product={product} />
           ))}
         </div>
       </section>
 
+      {/* Categories Grid */}
+      <section className="bg-gray-900 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-20 rounded-[4rem]">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-black text-white tracking-tight">SHOP BY CATEGORY</h2>
+            <p className="text-gray-400 mt-4">Find exactly what you're looking for</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.map((category: any, idx: number) => (
+              <Link 
+                key={category.code_id} 
+                to={`/category/${category.code_id}`}
+                className="group relative h-40 rounded-2xl overflow-hidden bg-gray-800"
+              >
+                <div className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                  <span className="text-white font-bold text-sm tracking-widest uppercase">{category.code_name}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* New Arrivals Section */}
       <section>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">New Arrivals</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {newArrivals.map((product) => (
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">NEW ARRIVALS</h2>
+            <div className="h-1.5 w-20 bg-blue-600 mt-2"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { id: 101, name: 'Premium Oversized Hoodie', price: 89000, isNew: true, image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=400&q=80' },
+            { id: 102, name: 'Classic Tapered Chinos', price: 75000, isNew: true, image: 'https://images.unsplash.com/photo-1624371414361-e6e9ea30215c?auto=format&fit=crop&w=400&q=80' },
+            { id: 103, name: 'Leather Minimal Sneakers', price: 129000, isNew: true, image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=400&q=80' },
+            { id: 104, name: 'Cotton Linen Shirt', price: 62000, isNew: true, image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=400&q=80' },
+          ].map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
