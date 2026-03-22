@@ -23,10 +23,14 @@ apiClient.interceptors.request.use(
     // Add Authorization header
     const token = localStorage.getItem('accessToken');
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      } else {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
     }
 
-    const userPaths = ['/api/user', '/api/product', '/api/auth','/api/category'];
+    const userPaths = ['/api/user','/api/product', '/api/auth','/api/category'];
 
     // 배열 중 하나라도 조건(startsWith)에 맞으면 true 반환
     const isUserApi = config.url && userPaths.some(path => config.url.startsWith(path));
@@ -70,6 +74,7 @@ apiClient.interceptors.response.use(
     if (response && response.data.result === 'FAILED') {
       const errorMsg = response.data.errorMessage || '알 수 없는 오류가 발생했습니다.';
       alert(errorMsg);
+      window.history.back();
       return Promise.reject(new Error(errorMsg));
     }
     return response;
@@ -77,9 +82,9 @@ apiClient.interceptors.response.use(
   (error) => {
     // 2. HTTP 에러(400, 500번대 등) 발생 시 처리
     let errorMsg = '서버와의 통신 중 오류가 발생했습니다.';
-    console.log(error.response.data);
+    console.log(error.response?.data);
 
-    if (error.response.data.errorMessage) {
+    if (error.response?.data?.errorMessage) {
       // 백엔드에서 보낸 customErrorMessage가 있는 경우 해당 메시지 사용
       errorMsg = error.response.data.errorMessage;
     } else if (error.message === 'Session expired') {
@@ -88,6 +93,7 @@ apiClient.interceptors.response.use(
 	}
 
     alert(errorMsg);
+    window.history.back();
     return Promise.reject(error);
   }
 );

@@ -1,7 +1,7 @@
 // src/App.tsx
-import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import apiClient from '@/api/client';
 import MainPage from '@/pages/MainPage';
 import LoginPage from '@/pages/LoginPage';
@@ -31,19 +31,30 @@ function App() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    if (location.pathname.startsWith('/search/')) {
+      const queryFromUrl = location.pathname.split('/search/')[1];
+      if (queryFromUrl) {
+        setSearchQuery(decodeURIComponent(queryFromUrl));
+      }
+    } else {
+      setSearchQuery('');
+    }
+  }, [location.pathname]);
+
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const response = await apiClient.get('/api/category/category_l');
       return response.data || [];
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes cache
   });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search/${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
+      navigate(`/search/${searchQuery.trim()}`);
     }
   };
 
@@ -58,7 +69,7 @@ function App() {
             {!isAdminRoute && (
               <>
                 <div className="relative group mx-2">
-                  <button className="text-gray-600 hover:text-blue-600 transition-colors font-medium">Categories</button>
+                  <Link to="/product/all" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">카테고리</Link>
                   <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 invisible group-hover:visible z-20 border border-gray-100">
                     {categories.map((category: any) => (
                       <Link key={category.code_id} to={`/category/${category.code_id}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
@@ -121,6 +132,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/product/all" element={<MainPage isAllProducts={true} />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/write-review/:id" element={<WriteReviewPage />} />

@@ -16,36 +16,50 @@ const ProductDetailPage: React.FC = () => {
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
+      let data: any = {};
       try {
         const response = await apiClient.get(`/api/product/${id}`);
-        return response.data;
+        // API 응답 구조에 맞게 데이터를 추출합니다 (예: response.data.data 또는 response.data)z
+        data = response.data?.data || response.data?.product || response.data || {};
       } catch (err) {
         console.warn('API fetch failed, using fallback mock data');
-        return {
-          id: id || '1',
-          name: '프리미엄 코튼 오버핏 셔츠',
-          price: 50000,
-          rating: 4.8,
-          reviewCount: 128,
-          description: '최고급 원단으로 제작되어 부드럽고 착용감이 뛰어납니다. 어떤 스타일에도 잘 어울리는 클래식한 디자인입니다.',
-          images: [
-            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Front',
-            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Side',
-            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Back',
-            'https://via.placeholder.com/600x750/e2e8f0/475569?text=Detail',
-          ],
-          detailedImages: [
-            'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+1',
-            'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+2',
-            'https://via.placeholder.com/1000x1200/f8fafc/94a3b8?text=Product+Detail+3',
-          ],
-          reviews: [
-            { id: 1, author: '김**', date: '2026-03-12', rating: 5, content: '핏이 정말 예뻐요! 재질도 부드럽고 한 여름 빼고는 다 입을 수 있을 것 같습니다. 다른 색상도 구매할 예정입니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review1' },
-            { id: 2, author: '이**', date: '2026-03-10', rating: 4, content: '배송이 하루만에 와서 좋았어요. 약간 구김이 가긴 하는데 다림질하면 괜찮습니다. 가성비 최고네요.', image: null },
-            { id: 3, author: '박**', date: '2026-03-05', rating: 5, content: '사이즈 고민 많았는데 정사이즈로 가니 딱 맞네요. 어깨 라인이 예쁘게 떨어져서 체형 보정도 됩니다. 만족합니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review2' },
-          ]
-        };
       }
+
+      // API 데이터와 UI에서 필요한 필드를 매핑하고, 누락된 필드는 기본값으로 채웁니다.
+      return {
+        id: data.id || data.productId || id || '1',
+        name: data.name || data.productName || '프리미엄 코튼 오버핏 셔츠',
+        price: data.price !== undefined ? data.price : 50000,
+        rating: data.rating || 4.8,
+        reviewCount: data.reviewCount || 128,
+        categoryL: data.categoryL || data.category_l || '상의',
+        categoryS: data.categoryS || data.category_s || '셔츠',
+        description: data.description || data.productDesc || '최고급 원단으로 제작되어 부드럽고 착용감이 뛰어납니다. 어떤 스타일에도 잘 어울리는 클래식한 디자인입니다.',
+        images: (data.mainImage || data.thumnail1) 
+          ? [data.mainImage, data.thumnail1, data.thumnail2].filter(Boolean)
+          : (data.images || (data.image ? [data.image, 'https://via.placeholder.com/600x750/e2e8f0/475569?text=Side', 'https://via.placeholder.com/600x750/e2e8f0/475569?text=Back'] : [
+          'https://via.placeholder.com/600x750/e2e8f0/475569?text=Front',
+          'https://via.placeholder.com/600x750/e2e8f0/475569?text=Side',
+          'https://via.placeholder.com/600x750/e2e8f0/475569?text=Back',
+          'https://via.placeholder.com/600x750/e2e8f0/475569?text=Detail',
+        ])),
+        detailedImages: (data.productDetail?.detailImage1 || data.detailImage1) 
+          ? [
+              data.productDetail?.detailImage1 || data.detailImage1,
+              data.productDetail?.detailImage2 || data.detailImage2,
+              data.productDetail?.detailImage3 || data.detailImage3
+            ].filter(Boolean)
+          : (data.detailedImages || [
+          'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+1',
+          'https://via.placeholder.com/1000x800/f8fafc/94a3b8?text=Product+Detail+2',
+          'https://via.placeholder.com/1000x1200/f8fafc/94a3b8?text=Product+Detail+3',
+        ]),
+        reviews: data.reviews || [
+          { id: 1, author: '김**', date: '2026-03-12', rating: 5, content: '핏이 정말 예뻐요! 재질도 부드럽고 한 여름 빼고는 다 입을 수 있을 것 같습니다. 다른 색상도 구매할 예정입니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review1' },
+          { id: 2, author: '이**', date: '2026-03-10', rating: 4, content: '배송이 하루만에 와서 좋았어요. 약간 구김이 가긴 하는데 다림질하면 괜찮습니다. 가성비 최고네요.', image: null },
+          { id: 3, author: '박**', date: '2026-03-05', rating: 5, content: '사이즈 고민 많았는데 정사이즈로 가니 딱 맞네요. 어깨 라인이 예쁘게 떨어져서 체형 보정도 됩니다. 만족합니다.', image: 'https://via.placeholder.com/150/cbd5e1/475569?text=Review2' },
+        ]
+      };
     },
   });
 
@@ -60,11 +74,10 @@ const ProductDetailPage: React.FC = () => {
   if (isLoading) return <div className="text-center py-20 text-gray-500">Loading product details...</div>;
   if (error || !product) return <div className="text-center py-20 text-red-500">Failed to load product.</div>;
 
-  const handleAuthAction = (actionName: string) => {
+  const handleAuthAction = async (actionName: string) => {
     if (!isLoggedIn) {
-      if (window.confirm('로그인 이후 이용가능합니다.\n로그인 페이지로 이동하시겠습니까?')) {
-        navigate('/login', { state: { from: location.pathname } });
-      }
+      alert('로그인 이후 이용가능합니다.');
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
     
@@ -75,7 +88,16 @@ const ProductDetailPage: React.FC = () => {
     } else if (actionName === '문의하기') {
       navigate(`/write-qna/${id || '1'}`);
     } else if (actionName === '장바구니 담기') {
-      alert('장바구니에 상품이 담겼습니다.');
+      try {
+        await apiClient.post('/api/mypage/cart_item', { 
+          productId: id,
+          quantity: quantity // optional but good to have
+        });
+        alert('장바구니에 상품이 담겼습니다.');
+      } catch (err) {
+        console.error('Failed to add to cart:', err);
+        alert('장바구니 담기에 실패했습니다.');
+      }
     }
   };
 
@@ -105,7 +127,7 @@ const ProductDetailPage: React.FC = () => {
 
           {/* Product Info */}
           <div className="flex-1">
-            <div className="mb-2 text-sm text-gray-500">카테고리 &gt; 상의 &gt; 셔츠</div>
+            <div className="mb-2 text-sm text-gray-500">카테고리 &gt; {product.categoryL} &gt; {product.categoryS}</div>
             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
             
             <div className="flex items-center gap-2 mt-3 mb-6">
@@ -202,7 +224,7 @@ const ProductDetailPage: React.FC = () => {
                 </p>
               </div>
               {product.detailedImages.map((img: string, idx: number) => (
-                <img key={idx} src={img} alt={`Detail ${idx + 1}`} className="w-full max-w-4xl rounded-lg shadow-sm" />
+                <img key={idx} src={img} alt={`Detail ${idx + 1}`} className="w-full max-w-xl rounded-lg shadow-sm" />
               ))}
               
               {/* Product Info Table */}

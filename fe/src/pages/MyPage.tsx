@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const MyPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('orders');
@@ -72,10 +73,10 @@ const MyPage: React.FC = () => {
             <p className="text-sm text-gray-500 mb-2">적립금</p>
             <p className="text-2xl font-bold text-blue-600">12,500<span className="text-base text-gray-800 font-normal ml-1">원</span></p>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center cursor-pointer hover:shadow-md transition-shadow">
+          <Link to="/cart" className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center cursor-pointer hover:shadow-md transition-shadow">
             <p className="text-sm text-gray-500 mb-2">장바구니</p>
             <p className="text-2xl font-bold text-blue-600">2<span className="text-base text-gray-800 font-normal ml-1">개</span></p>
-          </div>
+          </Link>
         </div>
 
         {/* 탭 내용 렌더링 */}

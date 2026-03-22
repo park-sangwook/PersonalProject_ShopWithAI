@@ -8,7 +8,7 @@ const ProductCard: React.FC<{ product: any }> = ({ product }) => (
   <Link to={`/product/${product.id || product.productId || product.code_id}`} className="group flex flex-col h-full bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
     <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
       <img 
-        src={product.image || 'https://via.placeholder.com/400x500/f8fafc/cbd5e1?text=Product'} 
+        src={product.mainImage || product.thumnail1 || product.image || 'https://via.placeholder.com/400x500/f8fafc/cbd5e1?text=Product'} 
         alt={product.name || product.productName} 
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
       />
@@ -35,7 +35,7 @@ const ProductCard: React.FC<{ product: any }> = ({ product }) => (
   </Link>
 );
 
-const MainPage: React.FC = () => {
+const MainPage: React.FC<{ isAllProducts?: boolean }> = ({ isAllProducts }) => {
   const { categoryId, query } = useParams<{ categoryId: string; query: string }>();
   const [sortBy, setSortBy] = useState('latest');
 
@@ -48,22 +48,41 @@ const MainPage: React.FC = () => {
       if (data.data) data = data.data;
       return data;
     },
+    staleTime: 1000 * 60 * 10,
   });
 
   const currentCategory = Array.isArray(categories) 
     ? categories.find((c: any) => String(c.code_id) === String(categoryId))
     : null;
   
-  const pageTitle = query 
-    ? `Search results for "${decodeURIComponent(query)}"` 
-    : (currentCategory ? currentCategory.code_name : 'Our Collection');
+  const pageTitle = isAllProducts
+    ? 'All Products'
+    : query 
+      ? `Search results for "${decodeURIComponent(query)}"` 
+      : (currentCategory ? currentCategory.code_name : 'Our Collection');
+
+  // 모든 상품 페칭
+  const { data: allProducts = [], isLoading: isAllProductsLoading } = useQuery({
+    queryKey: ['allProducts'],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/product/all');
+      let data = response.data || [];
+      if (data.data) data = data.data;
+      if (data.products) data = data.products;
+      if (data.content) data = data.content;
+      return Array.isArray(data) ? data : (data ? [data] : []);
+    },
+    enabled: !!isAllProducts,
+    staleTime: 1000 * 60 * 10,
+  });
 
   // 검색 결과 페칭
   const { data: searchResults = [], isLoading: isSearchLoading } = useQuery({
     queryKey: ['searchResults', query],
     queryFn: async () => {
       if (!query) return [];
-      const response = await apiClient.get(`/api/product/search/${query}`);
+      const decodedQuery = decodeURIComponent(query);
+      const response = await apiClient.get(`/api/product/search/${decodedQuery}`);
       let data = response.data || [];
       if (data.data) data = data.data;
       if (data.products) data = data.products;
@@ -71,6 +90,7 @@ const MainPage: React.FC = () => {
       return Array.isArray(data) ? data : (data ? [data] : []);
     },
     enabled: !!query,
+    staleTime: 1000 * 60 * 10,
   });
 
   // 카테고리 상품 페칭
@@ -92,6 +112,7 @@ const MainPage: React.FC = () => {
       return products;
     },
     enabled: !!categoryId,
+    staleTime: 1000 * 60 * 10,
   });
 
   // 추천 상품 데이터 페칭
@@ -99,6 +120,21 @@ const MainPage: React.FC = () => {
     queryKey: ['featuredProducts'],
     queryFn: async () => {
       const response = await apiClient.get('/api/product/recommend');
+      let data = response.data || [];
+      if (data.data) data = data.data;
+      if (data.products) data = data.products;
+      if (data.content) data = data.content;
+      return Array.isArray(data) ? data : (data ? [data] : []);
+    },
+    enabled: !categoryId && !query && !isAllProducts,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // 신상품 데이터 페칭
+  const { data: newArrivals = [], isLoading: isNewArrivalsLoading } = useQuery({
+    queryKey: ['newArrivals'],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/product/new_arrivals');
       let products = [];
       if (Array.isArray(response.data)) {
         products = response.data;
@@ -109,13 +145,14 @@ const MainPage: React.FC = () => {
       }
       return products;
     },
-    enabled: !categoryId && !query,
+    enabled: !categoryId && !query && !isAllProducts,
+    staleTime: 1000 * 60 * 10,
   });
 
-  const productList = query ? searchResults : (categoryId ? categoryProducts : []);
-  const isLoading = isSearchLoading || isCategoryLoading;
+  const productList = isAllProducts ? allProducts : (query ? searchResults : (categoryId ? categoryProducts : []));
+  const isLoading = isAllProducts ? isAllProductsLoading : (isSearchLoading || isCategoryLoading);
 
-  if (categoryId || query) {
+  if (categoryId || query || isAllProducts) {
     return (
       <div className="flex flex-col md:flex-row gap-8 py-4">
         {/* Sidebar */}
@@ -125,7 +162,7 @@ const MainPage: React.FC = () => {
             <ul className="space-y-3">
               <li>
                 <Link 
-                  to="/" 
+                  to="/product/all" 
                   className={`text-sm transition-colors ${!categoryId ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'}`}
                 >
                   All Products
@@ -235,7 +272,7 @@ const MainPage: React.FC = () => {
             Experience the perfect blend of comfort and elegance with our curated spring collection.
           </p>
           <div className="flex gap-4">
-            <Link to="/category/all" className="bg-white text-gray-900 font-bold py-4 px-10 rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300 transform hover:-translate-y-1">
+            <Link to="/product/all" className="bg-white text-gray-900 font-bold py-4 px-10 rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300 transform hover:-translate-y-1">
               Shop Collection
             </Link>
             <Link to="/qna" className="bg-white/10 backdrop-blur-md text-white border border-white/20 font-bold py-4 px-10 rounded-full hover:bg-white/20 transition-all duration-300">
@@ -249,10 +286,10 @@ const MainPage: React.FC = () => {
       <section>
         <div className="flex items-end justify-between mb-10">
           <div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">FEATURED ITEMS</h2>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">사용자 맞춤 추천</h2>
             <div className="h-1.5 w-20 bg-blue-600 mt-2"></div>
           </div>
-          <Link to="/category/all" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-2 group">
+          <Link to="/product/all" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-2 group">
             View All <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
           </Link>
         </div>
@@ -295,16 +332,24 @@ const MainPage: React.FC = () => {
             <div className="h-1.5 w-20 bg-blue-600 mt-2"></div>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { id: 101, name: 'Premium Oversized Hoodie', price: 89000, isNew: true, image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=400&q=80' },
-            { id: 102, name: 'Classic Tapered Chinos', price: 75000, isNew: true, image: 'https://images.unsplash.com/photo-1624371414361-e6e9ea30215c?auto=format&fit=crop&w=400&q=80' },
-            { id: 103, name: 'Leather Minimal Sneakers', price: 129000, isNew: true, image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=400&q=80' },
-            { id: 104, name: 'Cotton Linen Shirt', price: 62000, isNew: true, image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=400&q=80' },
-          ].map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        
+        {isNewArrivalsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 aspect-[4/5] rounded-xl mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            {newArrivals.slice(0, 8).map((product: any, idx: number) => (
+              <ProductCard key={product.id || product.productId || idx} product={product} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
