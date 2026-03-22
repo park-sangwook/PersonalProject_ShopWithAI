@@ -1,8 +1,30 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const MyPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('orders');
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const reviewableItems = [
+    { id: '101', name: '컴포트 와이드 데님 팬츠', image: 'https://via.placeholder.com/150/e2e8f0/475569?text=Pants', date: '2026.03.01' },
+    { id: '102', name: '베이직 테일러드 자켓', image: 'https://via.placeholder.com/150/e2e8f0/475569?text=Jacket', date: '2026.02.15' },
+  ];
+
+  const handleWriteReviewClick = () => {
+    if (reviewableItems.length >= 2) {
+      setIsReviewModalOpen(true);
+    } else if (reviewableItems.length === 1) {
+      navigate(`/write-review/${reviewableItems[0].id}`, { state: { mainImage: reviewableItems[0].image, productName: reviewableItems[0].name } });
+    } else {
+      alert('작성 가능한 리뷰가 없습니다.');
+    }
+  };
+
+  const handleReviewSelect = (item: any) => {
+    setIsReviewModalOpen(false);
+    navigate(`/write-review/${item.id}`, { state: { mainImage: item.image, productName: item.name } });
+  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto py-8">
@@ -62,7 +84,7 @@ const MyPage: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 space-y-8">
+      <main className="flex-1 space-y-8 relative">
         {/* 쿠폰 및 포인트 현황 (항상 표시) */}
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('coupons')}>
@@ -94,7 +116,7 @@ const MyPage: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
                     <p className="font-medium text-gray-800">2026.03.10 주문 <span className="text-gray-400 text-sm ml-2">(주문번호: 20260310-123456)</span></p>
-                    <a href="#" className="text-sm text-blue-600 hover:underline">상세보기</a>
+                    <Link to="/order-detail" className="text-sm text-blue-600 hover:underline">상세보기</Link>
                   </div>
                   <div className="flex items-center gap-6">
                     <img src="https://via.placeholder.com/150/e2e8f0/475569?text=Shirt" alt="Product" className="w-24 h-24 object-cover rounded-md" />
@@ -107,7 +129,7 @@ const MyPage: React.FC = () => {
                       <p className="font-bold text-gray-900 mt-2">50,000원</p>
                     </div>
                     <div className="flex flex-col gap-2 w-32">
-                      <button className="text-sm bg-gray-800 text-white hover:bg-gray-900 py-2 rounded transition-colors">배송조회</button>
+                      <Link to="/delivery-tracking" className="text-sm bg-gray-800 text-white hover:bg-gray-900 py-2 rounded transition-colors text-center">배송조회</Link>
                       <button className="text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 rounded transition-colors" onClick={() => setActiveTab('returns')}>취소/교환/반품</button>
                     </div>
                   </div>
@@ -117,7 +139,7 @@ const MyPage: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
                     <p className="font-medium text-gray-800">2026.03.01 주문 <span className="text-gray-400 text-sm ml-2">(주문번호: 20260301-987654)</span></p>
-                    <a href="#" className="text-sm text-blue-600 hover:underline">상세보기</a>
+                    <Link to="/order-detail" className="text-sm text-blue-600 hover:underline">상세보기</Link>
                   </div>
                   <div className="flex items-center gap-6">
                     <img src="https://via.placeholder.com/150/e2e8f0/475569?text=Pants" alt="Product" className="w-24 h-24 object-cover rounded-md" />
@@ -242,15 +264,15 @@ const MyPage: React.FC = () => {
             <>
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-gray-800">나의 리뷰</h3>
-                <span className="text-sm text-gray-500">작성가능 1건 / 작성완료 2건</span>
+                <span className="text-sm text-gray-500">작성가능 {reviewableItems.length}건 / 작성완료 2건</span>
               </div>
               
               <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-blue-800">작성 가능한 리뷰가 1건 있습니다.</h4>
+                  <h4 className="font-bold text-blue-800">작성 가능한 리뷰가 {reviewableItems.length}건 있습니다.</h4>
                   <p className="text-sm text-blue-600 mt-1">리뷰 작성 시 최대 1,000원의 적립금을 드립니다.</p>
                 </div>
-                <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium">작성하러 가기</button>
+                <button onClick={handleWriteReviewClick} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium">작성하러 가기</button>
               </div>
 
               <div className="space-y-6">
@@ -319,6 +341,36 @@ const MyPage: React.FC = () => {
           )}
 
         </div>
+
+        {/* 리뷰 작성 모달 */}
+        {isReviewModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">작성 가능한 리뷰</h3>
+                <button onClick={() => setIsReviewModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="max-h-96 overflow-y-auto space-y-4 pr-2">
+                {reviewableItems.map(item => (
+                  <div key={item.id} className="border border-gray-200 p-4 rounded-lg flex items-center gap-4">
+                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-800 text-sm">{item.name}</h4>
+                      <p className="text-xs text-gray-500">{item.date} 구매확정</p>
+                    </div>
+                    <button onClick={() => handleReviewSelect(item)} className="px-4 py-2 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800 transition-colors">
+                      리뷰 작성
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

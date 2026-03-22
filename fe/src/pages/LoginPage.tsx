@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
 
                 if (accessToken) {
                     login(actualUser, accessToken);
-                    alert('Login successful!');
+                    alert('로그인이 성공적으로 되었습니다.');
 
                     if (actualRole === 2) {
                         navigate('/admin/dashboard');

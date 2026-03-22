@@ -12,7 +12,7 @@ const AdminRoute: React.FC = () => {
     if (!isLoggedIn) {
       alert('로그인이 필요합니다.');
       setShouldRedirect('/login');
-    } else if (user?.role !== '2') {
+    } else if (Number(user?.role) !== 2) {
       alert('접근 권한이 없습니다.');
       setShouldRedirect('/');
     }
@@ -22,7 +22,7 @@ const AdminRoute: React.FC = () => {
     return <Navigate to={shouldRedirect} replace />;
   }
 
-  if (!isLoggedIn || user?.role !== '2') {
+  if (!isLoggedIn || Number(user?.role) !== 2) {
     return null; // 리디렉션 처리 중 깜빡임 방지
   }
 

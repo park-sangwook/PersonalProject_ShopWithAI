@@ -1,21 +1,38 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import apiClient from '@/api/client';
 
 const WriteQnaPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { mainImage?: string; productName?: string } || {};
+  const mainImage = state.mainImage || "https://via.placeholder.com/150/e2e8f0/475569?text=Product";
+  const productName = state.productName || "프리미엄 코튼 오버핏 셔츠";
+  
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSecret, setIsSecret] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
-    alert('상품 문의가 성공적으로 등록되었습니다.');
-    navigate(`/product/${id}`);
+
+    try {
+      await apiClient.post(`/api/product/QnA/${id}`, {
+        title,
+        content,
+        isSecret
+      });
+      alert('상품 문의가 성공적으로 등록되었습니다.');
+      navigate(`/product/${id}`);
+    } catch (error) {
+      console.error('Failed to submit QnA:', error);
+      alert('문의 등록에 실패했습니다.');
+    }
   };
 
   return (
@@ -23,9 +40,9 @@ const WriteQnaPage: React.FC = () => {
       <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">상품 문의하기</h1>
         <div className="mb-6 pb-6 border-b border-gray-100 flex items-center gap-4">
-          <img src="https://via.placeholder.com/150/e2e8f0/475569?text=Product" alt="Product" className="w-16 h-16 object-cover rounded-md" />
+          <img src={mainImage} alt="Product" className="w-16 h-16 object-cover rounded-md" />
           <div>
-            <p className="text-sm text-gray-500">프리미엄 코튼 오버핏 셔츠 (상품 ID: {id})</p>
+            <p className="text-sm text-gray-500">{productName} (상품 ID: {id})</p>
             <p className="font-medium text-gray-800">상품에 대해 궁금한 점을 남겨주세요.</p>
           </div>
         </div>

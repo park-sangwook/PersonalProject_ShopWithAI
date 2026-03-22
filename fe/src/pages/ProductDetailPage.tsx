@@ -84,9 +84,9 @@ const ProductDetailPage: React.FC = () => {
     if (actionName === '바로 구매하기') {
       navigate('/checkout');
     } else if (actionName === '리뷰 작성하기') {
-      navigate(`/write-review/${id || '1'}`);
+      navigate(`/write-review/${id || '1'}`, { state: { mainImage, productName: product.name } });
     } else if (actionName === '문의하기') {
-      navigate(`/write-qna/${id || '1'}`);
+      navigate(`/write-qna/${id || '1'}`, { state: { mainImage, productName: product.name } });
     } else if (actionName === '장바구니 담기') {
       try {
         await apiClient.post('/api/mypage/cart_item', { 

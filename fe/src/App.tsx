@@ -8,6 +8,8 @@ import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import CartPage from '@/pages/CartPage';
 import MyPage from '@/pages/MyPage';
+import DeliveryTrackingPage from '@/pages/DeliveryTrackingPage';
+import OrderDetailPage from '@/pages/OrderDetailPage';
 import ProductDetailPage from '@/pages/ProductDetailPage';
 import CheckoutPage from '@/pages/CheckoutPage';
 import QnaBoardPage from '@/pages/QnaBoardPage';
@@ -63,7 +65,7 @@ function App() {
       {/* Global Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link to="/" className="text-2xl font-bold text-gray-900 tracking-tight">DemoShop</Link>
+          <Link to="/" className="text-2xl font-bold text-gray-900 tracking-tight">MyShop</Link>
           
           <div className="flex-1 flex justify-center px-4 items-center">
             {!isAdminRoute && (
@@ -132,6 +134,8 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/delivery-tracking" element={<DeliveryTrackingPage />} />
+          <Route path="/order-detail" element={<OrderDetailPage />} />
           <Route path="/product/all" element={<MainPage isAllProducts={true} />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -162,7 +166,7 @@ function App() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="col-span-1 md:col-span-2">
-                <Link to="/" className="text-xl font-bold text-gray-900">DemoShop</Link>
+                <Link to="/" className="text-xl font-bold text-gray-900">MyShop</Link>
                 <p className="mt-4 text-gray-500 max-w-xs text-sm leading-relaxed">
                   Best quality products for your lifestyle. Discover our new arrivals and special offers.
                 </p>
@@ -183,7 +187,7 @@ function App() {
               </div>
             </div>
             <div className="mt-10 pt-8 border-t border-gray-100 text-center text-sm text-gray-400">
-              <p>&copy; 2026 DemoShop. All rights reserved.</p>
+              <p>&copy; 2026 MyShop. All rights reserved.</p>
             </div>
           </div>
         </footer>
