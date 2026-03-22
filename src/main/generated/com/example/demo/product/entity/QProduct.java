@@ -22,6 +22,8 @@ public class QProduct extends EntityPathBase<Product> {
 
     public static final QProduct product = new QProduct("product");
 
+    public final ListPath<CartItem, QCartItem> cartItems = this.<CartItem, QCartItem>createList("cartItems", CartItem.class, QCartItem.class, PathInits.DIRECT2);
+
     public final com.example.demo.category.entity.QCategoryEntity categoryLarge;
 
     public final com.example.demo.category.entity.QCategoryEntity categorySmall;
@@ -36,7 +38,11 @@ public class QProduct extends EntityPathBase<Product> {
 
     public final StringPath name = createString("name");
 
+    public final StringPath newArrivals = createString("newArrivals");
+
     public final NumberPath<Integer> price = createNumber("price", Integer.class);
+
+    public final QProductDetail productDetail;
 
     public final NumberPath<Double> rating = createNumber("rating", Double.class);
 
@@ -62,6 +68,7 @@ public class QProduct extends EntityPathBase<Product> {
         super(type, metadata, inits);
         this.categoryLarge = inits.isInitialized("categoryLarge") ? new com.example.demo.category.entity.QCategoryEntity(forProperty("categoryLarge"), inits.get("categoryLarge")) : null;
         this.categorySmall = inits.isInitialized("categorySmall") ? new com.example.demo.category.entity.QCategoryEntity(forProperty("categorySmall"), inits.get("categorySmall")) : null;
+        this.productDetail = inits.isInitialized("productDetail") ? new QProductDetail(forProperty("productDetail"), inits.get("productDetail")) : null;
     }
 
 }

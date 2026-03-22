@@ -23,7 +23,7 @@ public class QUserEntity extends EntityPathBase<UserEntity> {
 
     public final StringPath password = createString("password");
 
-    public final StringPath role = createString("role");
+    public final StringPath role_name = createString("role_name");
 
     public final NumberPath<Long> seq = createNumber("seq", Long.class);
 

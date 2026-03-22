@@ -23,4 +23,7 @@ public class ProductVO {
     private String colors;          // 색상 옵션 (블랙,화이트,네이비)
     private String sizes;
     private Date createdAt;
+    private String newArrivals; // 신상인지 확인 Y,N
+
+    private ProductDetailVO productDetail;
 }

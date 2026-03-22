@@ -3,6 +3,7 @@ package com.example.demo.product.controller;
 import com.example.demo.product.entity.Product;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.product.service.RecommendationService;
+import com.example.demo.product.vo.ProductImageVO;
 import com.example.demo.product.vo.ProductResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +33,20 @@ public class ProductController {
     * */
     @GetMapping(value = "/recommend")
     public ResponseEntity<?> recommendProduct(){
-        log.info("recommendationService.getRecommendations");
-        List<ProductResponse> pro = recommendationService.getRecommendations();
+        List<ProductImageVO> pro = recommendationService.getRecommendations();
+        log.info("recommendationService.getRecommendations : {}",pro);
         return ResponseEntity.status(HttpStatus.OK).body(pro);
+    }
+
+    /**
+     * 전체 카테고리 상품 조회
+     * @author : 박상욱
+     * @since : 2026-03-22
+     */
+    @GetMapping(value = "/all")
+    public ResponseEntity<?> selectProductAll(){
+        log.info("productService.selectProductAll");
+        return ResponseEntity.status(HttpStatus.OK).body(productService.selectProductAll());
     }
 
     /**
@@ -71,4 +83,17 @@ public class ProductController {
     public ResponseEntity<?> selectProductByProductId(@PathVariable long productId){
         return ResponseEntity.status(HttpStatus.OK).body(productService.selectProductByProductId(productId));
     }
+
+    /**
+     * 메인페이지 > 신상 물품 조회
+     * @author : 박상욱
+     * @since : 2026-03-22
+     * @return : 신상(new_arrivals = 'Y') 리턴
+     */
+    @GetMapping(value = "/new_arrivals")
+    public ResponseEntity<?> selectProductNewArrivals(){
+        return ResponseEntity.status(HttpStatus.OK).body(productService.selectProductNewArrivals());
+    }
+
+
 }

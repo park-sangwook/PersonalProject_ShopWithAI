@@ -27,9 +27,9 @@ public class UserController {
     @CustomInterface(type = EnumTest.USER)
     @PostMapping(value = "/login")
     public ResponseEntity<?> loginOk(@RequestBody UserVO vo, HttpServletResponse response){
-        String accessToken = tokenService.createAccessToken(vo);
-        String refreshToken = tokenService.createRefreshToken(vo);
         UserVO uvo = userService.selectUserById(vo);
+        String accessToken = tokenService.createAccessToken(uvo);
+        String refreshToken = tokenService.createRefreshToken(uvo);
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken",refreshToken)
                 .httpOnly(true)

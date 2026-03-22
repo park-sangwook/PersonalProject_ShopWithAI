@@ -2,6 +2,7 @@ package com.example.demo.product.service;
 
 import com.example.demo.product.entity.Product;
 import com.example.demo.common.vo.RecommendResponse;
+import com.example.demo.product.vo.ProductImageVO;
 import com.example.demo.product.vo.ProductResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,7 @@ import java.util.List;
 public class RecommendationService {
 
     private final ProductService productService;
-    public List<ProductResponse> getRecommendations() {
+    public List<ProductImageVO> getRecommendations() {
         RestTemplate restTemplate = new RestTemplate();
         long productId = 1;
         String fastapiUrl = "http://localhost:8000/recommend/" + productId;
@@ -32,7 +33,7 @@ public class RecommendationService {
 
             // 2. 받은 ID들로 DB에서 상세 정보 조회
             // 예: SELECT * FROM product WHERE id IN (ID들)
-            List<ProductResponse> pro = productService.selectProductByIds(recommendedIds);
+            List<ProductImageVO> pro = productService.selectProductByIds(recommendedIds);
             log.info("파이썬 추천 서비스 종료 : {}",pro);
             return pro;
 

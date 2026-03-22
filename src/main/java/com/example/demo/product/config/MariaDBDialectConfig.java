@@ -24,7 +24,7 @@ public class MariaDBDialectConfig implements FunctionContributor {
      */
     @Override
     public void contributeFunctions(FunctionContributions functionContributions) {
-        functionContributions.getFunctionRegistry().registerPattern("match_against","MATCH({0}) AGAINST({1} IN BOOLEAN MODE)"
+        functionContributions.getFunctionRegistry().registerPattern("match_against","MATCH(?1) AGAINST(?2 IN BOOLEAN MODE)"
         ,functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.DOUBLE));
     }
 }

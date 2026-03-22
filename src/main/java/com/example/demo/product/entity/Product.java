@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "product")
@@ -47,4 +49,14 @@ public class Product {
     @JoinColumn(name = "category_s", referencedColumnName = "code_id")
     @JsonIgnore
     private CategoryEntity categorySmall;
+
+    @Column(name = "new_arrivals")
+    private String newArrivals;
+
+    @OneToMany(mappedBy = "product")
+    private List<CartItem> cartItems = new ArrayList<>();
+
+    @OneToOne(mappedBy = "product")
+    private ProductDetail productDetail;
+
 }

@@ -1,5 +1,6 @@
 package com.example.demo.common.service;
 
+import com.example.demo.user.service.PrincipalDetails;
 import com.example.demo.user.vo.UserVO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,11 +27,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TokenService tokenService;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = resolve(response);
+        String token = tokenService.resolve(request);
+        log.info("token : {}",token);
         if(Objects.nonNull(token) && tokenService.validateToken(token)){
             UserVO vo = tokenService.getUserFromToken(token);
+            PrincipalDetails pd = new PrincipalDetails(vo);
             Collection<GrantedAuthority> ga = Collections.singletonList(new SimpleGrantedAuthority(getRole(vo.getRole())));
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(vo.getId(),"",ga);
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(pd,"",ga);
             SecurityContextHolder.getContext().setAuthentication(auth);
             log.info("Auth Success");
         }
@@ -42,9 +45,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return "ROLE_" + (role.equals("1") ? "USER" : "ADMIN");
     }
 
-    private String resolve(HttpServletResponse response){
-        String token = response.getHeader("Authorization");
-        return (Objects.nonNull(token) && StringUtils.hasText("Bearer "))?token.substring(7):null;
 
-    }
 }

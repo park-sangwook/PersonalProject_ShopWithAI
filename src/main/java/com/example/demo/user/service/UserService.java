@@ -28,9 +28,17 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserVO selectUserById(UserVO vo){
         UserEntity entity = Optional.ofNullable(queryFactory.selectFrom(user).where(user.id.eq(vo.getId())).fetchOne()).orElseThrow(()-> new CustomException("해당 아이디가 없습니다."));
+        log.info("role 확인 : {}",entity.getRole_name());
         if(!bCryptPasswordEncoder.matches(vo.getPassword(),entity.getPassword())){
             throw new CustomException("비밀번호가 일치하지 않습니다.");
         }
+        log.info("로그인 후 vo : {}",entity.toVO());
+        return entity.toVO();
+    }
+
+    @Transactional(readOnly = true)
+    public UserVO selectUserById(String userId){
+        UserEntity entity = Optional.ofNullable(queryFactory.selectFrom(user).where(user.id.eq(userId)).fetchOne()).orElseThrow(()-> new CustomException("해당 아이디가 없습니다."));
         return entity.toVO();
     }
 

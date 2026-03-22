@@ -14,6 +14,6 @@ public class UserVO {
     private String role;
 
     public UserEntity toEntity(){
-        return UserEntity.builder().id(this.id).password(this.password).role(this.role).build();
+        return UserEntity.builder().id(this.id).password(this.password).role_name(this.role).build();
     }
 }

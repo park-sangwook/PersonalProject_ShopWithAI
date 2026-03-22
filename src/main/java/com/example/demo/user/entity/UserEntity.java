@@ -23,9 +23,9 @@ public class UserEntity {
     private String password;
 
     @Column
-    private String role;
+    private String role_name;
 
     public UserVO toVO(){
-        return UserVO.builder().id(this.id).password(this.password).role(this.role).build();
+        return UserVO.builder().id(this.id).password(this.password).role(this.role_name).build();
     }
 }
