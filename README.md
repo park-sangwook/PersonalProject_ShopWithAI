@@ -5,7 +5,9 @@
 사용자의 활동 데이터를 실시간으로 분석하여 개인화된 상품을 제안하는 쇼핑몰 서비스입니다. 
 **Spring Boot**의 견고한 비즈니스 로직과 **FastAPI**의 빠른 데이터 처리 능력을 결합하여 현대적인 이커머스 아키텍처를 구현했습니다.
 
----
+--- 
+## 메인이미지
+<img width="1877" height="807" alt="image" src="https://github.com/user-attachments/assets/519a293f-820a-41fa-bae3-2ef5442607b1" />
 
 ## 🚀 주요 기능 (Key Features)
 
