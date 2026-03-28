@@ -10,6 +10,8 @@ const ProductDetailPage: React.FC = () => {
   const location = useLocation();
   const { isLoggedIn } = useAuth();
   const [quantity, setQuantity] = useState(1);
+  const [color, setColor] = useState('');
+  const [size, setSize] = useState('');
   const [activeTab, setActiveTab] = useState('details');
 
   // useQuery를 사용하여 상품 상세 정보 페칭 (캐싱 적용)
@@ -82,7 +84,7 @@ const ProductDetailPage: React.FC = () => {
     }
     
     if (actionName === '바로 구매하기') {
-      navigate('/checkout');
+      navigate('/checkout', { state: { items: [{ product, quantity, color, size }] } });
     } else if (actionName === '리뷰 작성하기') {
       navigate(`/write-review/${id || '1'}`, { state: { mainImage, productName: product.name } });
     } else if (actionName === '문의하기') {
@@ -91,7 +93,9 @@ const ProductDetailPage: React.FC = () => {
       try {
         await apiClient.post('/api/mypage/cart_item', { 
           productId: id,
-          quantity: quantity // optional but good to have
+          quantity: quantity,
+          color: color,
+          size: size
         });
         alert('장바구니에 상품이 담겼습니다.');
       } catch (err) {

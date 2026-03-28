@@ -1,11 +1,13 @@
 // src/pages/CartPage.tsx
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/client';
 
 const CartPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
 
   const { data: cartItems = [], isLoading } = useQuery({
     queryKey: ['cartItems'],
@@ -26,12 +28,25 @@ const CartPage: React.FC = () => {
     },
   });
 
+  const handleQuantityChange = (id: string | number, delta: number, currentQty: number) => {
+    const newQty = Math.max(1, (localQuantities[id] ?? currentQty) + delta);
+    setLocalQuantities(prev => ({ ...prev, [id]: newQty }));
+  };
+
   const subtotal = cartItems.reduce((sum: number, item: any) => {
     const product = item.product || item;
     const price = product.price || product.productPrice || 0;
-    const qty = item.quantity || 1;
+    const qty = (localQuantities[item.id || item.productId || product.id] ?? item.quantity) || 1;
     return sum + price * qty;
   }, 0);
+
+  const handleCheckout = () => {
+    const checkoutItems = cartItems.map((item: any) => ({
+      ...item,
+      quantity: (localQuantities[item.id || item.productId || (item.product && item.product.id)] ?? item.quantity) || 1
+    }));
+    navigate('/checkout', { state: { items: checkoutItems } });
+  };
 
   if (isLoading) {
     return (
@@ -67,13 +82,18 @@ const CartPage: React.FC = () => {
                   <div className="ml-4 flex flex-1 flex-col">
                     <div className="flex justify-between text-base font-medium text-gray-900">
                       <h3>{product.name || product.productName}</h3>
-                      <p>₩{((product.price || product.productPrice || 0) * (item.quantity || 1)).toLocaleString()}</p>
+                      <p>₩{((product.price || product.productPrice || 0) * ((localQuantities[item.id || item.productId || product.id] ?? item.quantity) || 1)).toLocaleString()}</p>
                     </div>
-                    <div className="flex flex-1 items-end justify-between text-sm">
+                    {(item.color || item.size) && (
+                      <p className="mt-1 text-sm text-gray-500">
+                        {item.color && `색상: ${item.color} `} {item.size && `사이즈: ${item.size}`}
+                      </p>
+                    )}
+                    <div className="flex flex-1 items-end justify-between text-sm mt-2">
                       <div className="flex items-center border border-gray-300 rounded-md">
-                         <button className="px-3 py-1 hover:bg-gray-50">-</button>
-                         <span className="px-4">{item.quantity || 1}</span>
-                         <button className="px-3 py-1 hover:bg-gray-50">+</button>
+                         <button onClick={() => handleQuantityChange(item.id || item.productId || product.id, -1, item.quantity || 1)} className="px-3 py-1 hover:bg-gray-50">-</button>
+                         <span className="px-4">{(localQuantities[item.id || item.productId || product.id] ?? item.quantity) || 1}</span>
+                         <button onClick={() => handleQuantityChange(item.id || item.productId || product.id, 1, item.quantity || 1)} className="px-3 py-1 hover:bg-gray-50">+</button>
                       </div>
                       <button 
                         onClick={() => removeMutation.mutate(product.id || product.productId || item.id)}
@@ -104,12 +124,12 @@ const CartPage: React.FC = () => {
                   <p className="text-blue-600">₩{(subtotal + 3000).toLocaleString()}</p>
                 </div>
               </div>
-              <Link 
-                to="/checkout" 
+              <button 
+                onClick={handleCheckout}
                 className="block w-full text-center mt-6 bg-blue-600 text-white py-3 rounded-md font-bold hover:bg-blue-700 transition-colors shadow-sm"
               >
                 주문하기
-              </Link>
+              </button>
             </div>
           </div>
         </div>

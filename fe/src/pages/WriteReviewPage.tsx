@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import apiClient from '@/api/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const WriteReviewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const state = location.state as { mainImage?: string; productName?: string } || {};
   const mainImage = state.mainImage || "https://via.placeholder.com/150/e2e8f0/475569?text=Product";
   const productName = state.productName || "프리미엄 코튼 오버핏 셔츠";
@@ -39,8 +41,11 @@ const WriteReviewPage: React.FC = () => {
       const formData = new FormData();
       formData.append('content', content);
       formData.append('rating', rating.toString());
+      if (user?.seq) {
+        formData.append('user_id', user.seq.toString());
+      }
       if (imageFile) {
-        formData.append('uploadImage', imageFile);
+        formData.append('uploadFile', imageFile);
       }
       
       await apiClient.post(`/api/product/write-review/${id}`, formData, {
@@ -102,9 +107,32 @@ const WriteReviewPage: React.FC = () => {
               className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
-              <div className="space-y-1 text-center">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="mx-auto h-32 object-contain" />
+              <div className="space-y-1 text-center w-full">
+                {imageFile ? (
+                  <div className="flex items-center justify-between bg-blue-50 p-4 rounded-md border border-blue-100">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                      </svg>
+                      <div className="text-left">
+                        <p className="text-sm font-bold text-gray-900 truncate max-w-[200px]">{imageFile.name}</p>
+                        <p className="text-xs text-gray-500">{(imageFile.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
                 ) : (
                   <>
                     <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">

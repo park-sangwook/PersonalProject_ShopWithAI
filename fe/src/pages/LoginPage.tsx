@@ -25,7 +25,9 @@ const LoginPage: React.FC = () => {
             if (apiResponse) {
                 const { accessToken, user, role } = apiResponse;
                 const actualRole = user?.role ?? role ?? 1;
-                const actualUser = user || { name: userId, role: actualRole };
+                const actualSeq = user?.seq ?? apiResponse.seq ?? 0;
+                const actualId = user?.id || userId;
+                const actualUser = { ...user, seq: actualSeq, id: actualId, name: user?.name || userId, role: actualRole };
 
                 if (accessToken) {
                     login(actualUser, accessToken);

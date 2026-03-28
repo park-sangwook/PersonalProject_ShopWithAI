@@ -81,7 +81,8 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     // 2. HTTP 에러(400, 500번대 등) 발생 시 처리
-    let errorMsg = '서버와의 통신 중 오류가 발생했습니다.';
+    // let errorMsg = '서버와의 통신 중 오류가 발생했습니다.';
+    let errorMsg ='';
     console.log(error.response?.data);
 
     if (error.response?.data?.errorMessage) {
@@ -92,7 +93,7 @@ apiClient.interceptors.response.use(
 		return Promise.reject(error);
 	}
 
-    alert(errorMsg);
+    if(errorMsg.length>0)alert(errorMsg);
     window.history.back();
     return Promise.reject(error);
   }

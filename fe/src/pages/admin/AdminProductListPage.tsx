@@ -8,16 +8,8 @@ const AdminProductListPage: React.FC = () => {
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['adminProducts'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/api/product/all'); // 관리자용 전체 상품 API 호출
-        return response.data || [];
-      } catch (err) {
-        console.warn('API fetch failed, using fallback mock data');
-        return [
-          { id: 1, name: '멋진 셔츠', category: 'Apparel', price: 50000, stock: 100 },
-          { id: 2, name: '편안한 바지', category: 'Apparel', price: 70000, stock: 50 },
-        ];
-      }
+      const response = await apiClient.get('/api/product/all');
+      return response.data || [];
     },
   });
 
@@ -39,8 +31,12 @@ const AdminProductListPage: React.FC = () => {
           </thead>
           <tbody>
             {products.map((p: any) => (
-              <tr key={p.id} className="border-b hover:bg-gray-50">
-                <td className="p-4">{p.id}</td><td className="p-4">{p.name}</td><td className="p-4">{p.category}</td><td className="p-4">₩{p.price.toLocaleString()}</td><td className="p-4">{p.stock}</td>
+              <tr key={p.id || p.seq || p.productId} className="border-b hover:bg-gray-50">
+                <td className="p-4">{p.id || p.seq || p.productId}</td>
+                <td className="p-4">{p.name || p.productName}</td>
+                <td className="p-4">{p.category || p.category_l || p.categoryL}</td>
+                <td className="p-4">₩{(p.price || 0).toLocaleString()}</td>
+                <td className="p-4">{p.stock || p.productStock || 0}</td>
                 <td className="p-4 space-x-2"><button className="text-sm bg-gray-200 py-1 px-3 rounded">Edit</button><button className="text-sm bg-red-500 text-white py-1 px-3 rounded">Delete</button></td>
               </tr>
             ))}

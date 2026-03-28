@@ -3,6 +3,8 @@ import React, { createContext, useState, useContext, type ReactNode } from 'reac
 import apiClient from '@/api/client';
 
 interface User {
+  seq: number;
+  id?: string;
   name: string;
   role: number;
 }

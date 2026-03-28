@@ -109,8 +109,8 @@ function App() {
             )}
             {isLoggedIn ? (
               <>
-                {user?.role === 2 && (
-                  <Link to="/admin/dashboard" className={`text-sm px-3 py-1 rounded-md ${isAdminRoute ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>Admin</Link>
+                {Number(user?.role) === 2 && (
+                  <Link to="/admin/dashboard" className={`text-sm px-3 py-1 rounded-md ${isAdminRoute ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>Admin Panel</Link>
                 )}
                 <Link to="/mypage" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">My Page</Link>
                 <button onClick={logout} className="px-4 py-1.5 bg-gray-800 text-white rounded-md text-sm font-medium hover:bg-gray-700 transition-colors shadow-sm">Logout</button>
