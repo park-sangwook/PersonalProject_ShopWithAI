@@ -1,20 +1,29 @@
 package com.example.demo.product.controller;
 
+import com.example.demo.common.vo.CustomException;
 import com.example.demo.product.entity.Product;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.product.service.RecommendationService;
+import com.example.demo.product.service.ReviewService;
 import com.example.demo.product.vo.ProductImageVO;
 import com.example.demo.product.vo.ProductResponse;
+import com.example.demo.product.vo.ReviewVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/api/product")
@@ -24,6 +33,9 @@ public class ProductController {
 
     private final RecommendationService recommendationService;
     private final ProductService productService;
+    private final ReviewService reviewService;
+
+    private final String UPLOAD_PATH = "D:/upload/review";
 
     /**
     * Fast-API와 ScikitLearn을 활용한 마지막에 구매한 물품을 기준으로 유사한 물품 추천해주는 사용자 맟춤 추천 서비스
@@ -96,4 +108,43 @@ public class ProductController {
     }
 
 
+    /**
+     * 리뷰 작성
+     * @author : 박상욱
+     * @since : 2026-03-22
+     * @param : productId, reviewVO, uploadFile
+     */
+    @PostMapping(value = "/write-review/{productId}")
+    public ResponseEntity<?> writeReviewByProductId(@PathVariable Long productId, @ModelAttribute ReviewVO reviewVO, MultipartFile uploadFile){
+        log.info("리뷰 파라미터 : {}",reviewVO);
+        log.info("reviewService.insertReview");
+        reviewVO.setProductId(productId);
+        if(Objects.nonNull(uploadFile)) {
+            UUID uuidName = UUID.randomUUID();
+            String fileName = uuidName + uploadFile.getOriginalFilename();
+            Path target = Paths.get(UPLOAD_PATH).resolve(fileName);
+            try {
+                if (!Files.exists(target.getParent())) Files.createDirectories(target.getParent());
+                Files.copy(uploadFile.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+                reviewVO.setUuidName(uuidName);
+                reviewVO.setImage(uploadFile.getOriginalFilename());
+            } catch (IOException e) {
+                log.info("리뷰 작성중 문제가 발생하였습니다 : {}", e.getMessage());
+                throw new CustomException("이미지 업로드 시 문제가 발생하였습니다.");
+            }
+        }
+        reviewService.insertReview(reviewVO);
+        return ResponseEntity.status(HttpStatus.OK).body("SUCCESS");
+    }
+
+    /**
+     * 문의 작성
+     * @author : 박상욱
+     * @since : 2026-03-22
+     * @param : productId
+     */
+    @PostMapping(value = "/QnA/{productId}")
+    public ResponseEntity<?> writeQnAByProductId(@PathVariable Long productId){
+        return null;
+    }
 }

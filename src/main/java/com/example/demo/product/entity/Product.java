@@ -56,7 +56,11 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<CartItem> cartItems = new ArrayList<>();
 
+    @JsonIgnore
     @OneToOne(mappedBy = "product")
     private ProductDetail productDetail;
+
+    @OneToOne(mappedBy = "product")
+    private ReviewEntity review;
 
 }

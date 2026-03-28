@@ -2,12 +2,13 @@ package com.example.demo.user.vo;
 
 import com.example.demo.user.entity.UserEntity;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter@Setter
+@NoArgsConstructor@AllArgsConstructor
 @Builder
 public class UserVO {
+    private Long seq;
     @NotNull(message = "id는 필수요소입니다.")
     private String id;
     private String password;

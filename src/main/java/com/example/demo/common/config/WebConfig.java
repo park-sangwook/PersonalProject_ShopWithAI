@@ -22,6 +22,6 @@ public class WebConfig implements WebMvcConfigurer {
         // 브라우저에서 /images/** 로 접근하면
         registry.addResourceHandler("/images/**")
                 // 실제 서버의 아래 경로에서 파일을 찾아라
-                .addResourceLocations("file:///C:/shop/upload/");
+                .addResourceLocations("file:///D:/upload/");
     }
 }

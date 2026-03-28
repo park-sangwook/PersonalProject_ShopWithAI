@@ -7,6 +7,7 @@ import com.example.demo.user.service.UserService;
 import com.example.demo.user.vo.UserVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 @RestController
 @RequestMapping(value = "/api/user")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final TokenService tokenService;
@@ -69,7 +71,20 @@ public class UserController {
 
     @PostMapping(value = "/signup")
     public ResponseEntity<?> signupOk(@RequestBody UserVO vo){
+        log.info("userService.insert : {}",vo);
         userService.insert(vo);
         return ResponseEntity.ok("SUCCESS");
+    }
+
+    /**
+     * 관리자 페이지에서 Member탭 조회
+     * @author : 박상욱
+     * @since : 2026-03-28
+     * @return
+     */
+    @GetMapping(value = "/all")
+    public ResponseEntity<?> selectUserAll(){
+        log.info("userService.selectUserAll");
+        return ResponseEntity.status(HttpStatus.OK).body(userService.selectUserAll());
     }
 }

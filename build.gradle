@@ -64,6 +64,10 @@ tasks.withType(JavaCompile) {
 	options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
 }
 
+compileJava {
+	options.compilerArgs << '-parameters'
+}
+
 clean {
 	delete file(querydslDir)
 }
