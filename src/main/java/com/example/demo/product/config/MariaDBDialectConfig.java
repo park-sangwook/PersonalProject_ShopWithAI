@@ -2,7 +2,6 @@ package com.example.demo.product.config;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.type.StandardBasicTypes;
 
 public class MariaDBDialectConfig implements FunctionContributor {

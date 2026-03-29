@@ -40,6 +40,8 @@ public class QProduct extends EntityPathBase<Product> {
 
     public final StringPath newArrivals = createString("newArrivals");
 
+    public final QOrderProduct order;
+
     public final NumberPath<Integer> price = createNumber("price", Integer.class);
 
     public final QProductDetail productDetail;
@@ -47,6 +49,8 @@ public class QProduct extends EntityPathBase<Product> {
     public final NumberPath<Double> rating = createNumber("rating", Double.class);
 
     public final QReviewEntity review;
+
+    public final NumberPath<Long> reviewCount = createNumber("reviewCount", Long.class);
 
     public final StringPath sizes = createString("sizes");
 
@@ -70,6 +74,7 @@ public class QProduct extends EntityPathBase<Product> {
         super(type, metadata, inits);
         this.categoryLarge = inits.isInitialized("categoryLarge") ? new com.example.demo.category.entity.QCategoryEntity(forProperty("categoryLarge"), inits.get("categoryLarge")) : null;
         this.categorySmall = inits.isInitialized("categorySmall") ? new com.example.demo.category.entity.QCategoryEntity(forProperty("categorySmall"), inits.get("categorySmall")) : null;
+        this.order = inits.isInitialized("order") ? new QOrderProduct(forProperty("order"), inits.get("order")) : null;
         this.productDetail = inits.isInitialized("productDetail") ? new QProductDetail(forProperty("productDetail"), inits.get("productDetail")) : null;
         this.review = inits.isInitialized("review") ? new QReviewEntity(forProperty("review"), inits.get("review")) : null;
     }

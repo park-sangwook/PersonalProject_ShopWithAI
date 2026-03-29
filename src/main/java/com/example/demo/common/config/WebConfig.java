@@ -24,4 +24,5 @@ public class WebConfig implements WebMvcConfigurer {
                 // 실제 서버의 아래 경로에서 파일을 찾아라
                 .addResourceLocations("file:///D:/upload/");
     }
+
 }

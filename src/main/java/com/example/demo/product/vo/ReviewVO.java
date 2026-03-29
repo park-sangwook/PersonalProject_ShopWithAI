@@ -17,6 +17,9 @@ public class ReviewVO {
     @BindParam("user_id")
     private Long userId;
 
+
+    private long reviewCount;
+
     private String content;
     private String image;
     private Date createAt;

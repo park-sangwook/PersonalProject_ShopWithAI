@@ -34,7 +34,7 @@ public class ProductFullScan {
         };
 
         return queryFactory
-                .select(Projections.fields(ProductImageVO.class,productFieldsWithImage))
+                .select(Projections.bean(ProductImageVO.class,productFieldsWithImage))
                 .from(product).leftJoin(productImage).on(product.id.eq(productImage.productId))
                 .where(
                         // 3단계에서 등록한 커스텀 함수 호출

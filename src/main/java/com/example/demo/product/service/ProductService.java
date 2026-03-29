@@ -1,13 +1,18 @@
 package com.example.demo.product.service;
 
 import com.example.demo.common.vo.CustomException;
+import com.example.demo.product.entity.Product;
 import com.example.demo.product.entity.QProduct;
 import com.example.demo.product.entity.QProductDetail;
 import com.example.demo.product.entity.QProductImage;
+import com.example.demo.product.repository.ProductRepository;
 import com.example.demo.product.vo.ProductDetailVO;
 import com.example.demo.product.vo.ProductImageVO;
 import com.example.demo.product.vo.ProductResponse;
 import com.example.demo.product.vo.ProductVO;
+import com.example.demo.user.entity.UserEntity;
+import com.example.demo.user.repository.UserRepository;
+import com.example.demo.user.service.PrincipalDetails;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -32,19 +37,20 @@ public class ProductService {
     private final QProduct product = QProduct.product;
     private final QProductImage productImage = QProductImage.productImage;
     private final QProductDetail productDetail = QProductDetail.productDetail;
+
     private final JPAQueryFactory queryFactory;
 
     Expression<?>[] productFields = {
             product.id, product.name, product.price, product.categoryLarge.codeId.as("categoryL"),
             product.categorySmall.codeId.as("categoryS"), product.detail, product.rating,
-            product.colors, product.sizes, product.createdAt,product.newArrivals
+            product.colors, product.sizes, product.createdAt,product.newArrivals,product.reviewCount
     };
 
     Expression<?>[] productFieldsWithImage = {
             product.id, product.name, product.price, product.categoryLarge.codeName.as("categoryL"),
             product.categorySmall.codeName.as("categoryS"), product.detail, product.rating,
             product.colors, product.sizes, product.createdAt,product.newArrivals,productImage.mainImage,productImage.thumnail1,
-            productImage.thumnail2,Projections.fields(ProductDetailVO.class,productDetail.detailImage1
+            productImage.thumnail2,Projections.fields(ProductDetailVO.class,productDetail.detailImage1,product.reviewCount
                 ,productDetail.detailImage2,productDetail.detailImage3,productDetail.title,productDetail.content).as("productDetail")
     };
 
@@ -111,6 +117,8 @@ public class ProductService {
         return pro;
     }
 
+    // 신상 조회
+    @Transactional(readOnly = true)
     public List<ProductImageVO> selectProductNewArrivals(){
         List<ProductImageVO> pivo = queryFactory.select(Projections.fields(ProductImageVO.class,productFieldsWithImage))
                 .from(product).leftJoin(productImage).on(product.id.eq(productImage.productId))
@@ -120,7 +128,7 @@ public class ProductService {
     }
 
 
-
+    // MariaDB FullIndex-Scan을 사용하는 함수
     private BooleanExpression nameMatch(String keyword) {
         if (keyword == null) return null;
         return Expressions.numberTemplate(Double.class,

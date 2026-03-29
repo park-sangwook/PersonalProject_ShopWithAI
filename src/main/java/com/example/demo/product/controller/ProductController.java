@@ -1,21 +1,30 @@
 package com.example.demo.product.controller;
 
 import com.example.demo.common.vo.CustomException;
+import com.example.demo.common.vo.CustomInterface;
+import com.example.demo.common.vo.EnumTest;
 import com.example.demo.product.entity.Product;
+import com.example.demo.product.service.OrderProductService;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.product.service.RecommendationService;
 import com.example.demo.product.service.ReviewService;
+import com.example.demo.product.vo.OrderProductVO;
 import com.example.demo.product.vo.ProductImageVO;
-import com.example.demo.product.vo.ProductResponse;
+import com.example.demo.product.vo.ProductVO;
 import com.example.demo.product.vo.ReviewVO;
+import com.example.demo.user.service.PrincipalDetails;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +43,9 @@ public class ProductController {
     private final RecommendationService recommendationService;
     private final ProductService productService;
     private final ReviewService reviewService;
+    private final OrderProductService orderProductService;
+
+    private final ObjectMapper objectMapper;
 
     private final String UPLOAD_PATH = "D:/upload/review";
 
@@ -146,5 +158,25 @@ public class ProductController {
     @PostMapping(value = "/QnA/{productId}")
     public ResponseEntity<?> writeQnAByProductId(@PathVariable Long productId){
         return null;
+    }
+
+
+    /**
+     * 상품 구매
+     * @author : 박상욱
+     * @since : 2026-03-29
+     * @param vo
+     * @param details
+     * @return
+     */
+    @CustomInterface(type = EnumTest.USER)
+    @PostMapping(value = "/order")
+    public ResponseEntity<?> orderProduct(@RequestBody HashMap<String,Object> vo, @AuthenticationPrincipal PrincipalDetails details){
+        List<ProductVO> prods = objectMapper.convertValue(vo.get("products"), new TypeReference<List<ProductVO>>() {});
+        log.info("주문 전 파라미터 : {}",vo);
+        for(ProductVO pvo : prods){
+            orderProductService.insertOrderProduct(pvo,details.getUsername());
+        }
+        return ResponseEntity.status(HttpStatus.OK).body("SUCCESS");
     }
 }

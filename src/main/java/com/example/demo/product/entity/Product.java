@@ -30,6 +30,9 @@ public class Product {
 
     private Integer price; // 가격
 
+    @Column(name = "review_count")
+    private long reviewCount; // 리뷰 카운트
+
     private Double rating; // 평점
 
     private String colors; // 블랙,화이트...
@@ -62,5 +65,8 @@ public class Product {
 
     @OneToOne(mappedBy = "product")
     private ReviewEntity review;
+
+    @OneToOne(mappedBy = "product")
+    private OrderProduct order;
 
 }

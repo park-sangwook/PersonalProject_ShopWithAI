@@ -22,8 +22,12 @@ public class ProductVO {
     // DB의 쉼표 구분 문자열을 리스트로 다루기 위한 필드
     private String colors;          // 색상 옵션 (블랙,화이트,네이비)
     private String sizes;
+    private String color;
+    private String size;
     private Date createdAt;
     private String newArrivals; // 신상인지 확인 Y,N
+
+    private long reviewCount;
 
     private ProductDetailVO productDetail;
 }

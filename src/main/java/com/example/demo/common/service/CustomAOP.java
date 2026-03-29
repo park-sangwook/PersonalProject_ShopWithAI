@@ -14,6 +14,8 @@ public class CustomAOP {
 
     @Before("@annotation(ci)")
     public void aopPractice(JoinPoint joinPoint, CustomInterface ci){
-      log.info("AOP 테스트 : {}",ci.type());
+      String serviceName = joinPoint.getTarget().getClass().getName();
+      String methodName = joinPoint.getSignature().getName();
+      log.info(serviceName+"."+methodName);
     }
 }

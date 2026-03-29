@@ -25,12 +25,12 @@ public class MyPageController {
      * @param : productId, userId
      */
     @PostMapping(value = "/cart_item")
-    public ResponseEntity<?> selectMypageCartItem(@RequestBody HashMap<String,String> map, @AuthenticationPrincipal PrincipalDetails userPrincipal){
+    public ResponseEntity<?> selectMypageCartItem(@ModelAttribute HashMap<String,String> map, @AuthenticationPrincipal PrincipalDetails userPrincipal){
         log.info("마이페이지 > 장바구니 파라미터 : {}",map);
         log.info("mypageService.insertCartItem");
         String userId = userPrincipal.getUsername();
-        Long productId = Long.valueOf(map.get("productId"));
-        mypageService.insertCartItem(productId,userId);
+        map.put("userId",userId);
+        mypageService.insertCartItem(map);
         return ResponseEntity.status(HttpStatus.OK).body("SUCCESS");
     }
 

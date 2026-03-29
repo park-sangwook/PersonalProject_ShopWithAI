@@ -14,4 +14,5 @@ public class EnviromentService {
         Properties prop = bean.getObject();
         return prop.getProperty("shop."+name,"do not have "+name);
     }
+
 }

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -39,9 +40,10 @@ public class MypageService {
     Expression<?>[] cartItemFields = {cartItem.userId,Projections.fields(ProductImageVO.class,productFieldsWithImage).as("product") };
 
     @Transactional
-    public void insertCartItem(Long productId,String userId){
+    public void insertCartItem(HashMap<String,String> map){
+        long productId = Long.parseLong(map.get("productId"));
         Product productProxy = productRepository.getReferenceById(productId);
-        cartItemRepository.save(CartItem.builder().userId(userId).product(productProxy).build());
+        cartItemRepository.save(CartItem.builder().userId(map.get("userId")).product(productProxy).color(map.get("color")).size(map.get("size")).build());
     }
 
     @Transactional(readOnly = true)
