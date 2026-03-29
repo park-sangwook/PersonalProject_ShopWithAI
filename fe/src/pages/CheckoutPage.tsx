@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import apiClient from '@/api/client';
 
 declare global {
   interface Window {
@@ -64,6 +65,35 @@ const CheckoutPage: React.FC = () => {
 
   const shippingFee = subtotal > 0 ? 3000 : 0;
   const total = subtotal + shippingFee;
+
+  const handleOrder = async () => {
+    if (items.length === 0) {
+      alert('주문할 상품이 없습니다.');
+      return;
+    }
+
+    try {
+      const orderData = {
+        login_id: user?.id || user?.name || 'guest',
+        products: items.map((item: any) => {
+          const product = item.product || item;
+          return {
+            ...product,
+            quantity: item.quantity || 1,
+            color: item.color || '',
+            size: item.size || ''
+          };
+        })
+      };
+
+      await apiClient.post('/api/product/order', orderData);
+      alert('주문이 완료되었습니다!');
+      navigate('/');
+    } catch (error) {
+      console.error('Order failed:', error);
+      alert('주문 처리 중 오류가 발생했습니다.');
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto py-10 px-4">
@@ -151,7 +181,7 @@ const CheckoutPage: React.FC = () => {
 
         <div className="space-y-8">
           <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 h-min sticky top-8">
-            <h2 className="text-xl font-semibold mb-6 pb-2 border-b">Order Summary</h2>
+            <h2 className="text-xl font-semibold mb-6 pb-2 border-b">주문 내역</h2>
             <div className="space-y-4 max-h-[400px] overflow-y-auto mb-6 pr-2">
               {items.length > 0 ? (
                 items.map((item: any, idx: number) => {
@@ -202,13 +232,13 @@ const CheckoutPage: React.FC = () => {
                 onClick={() => navigate(-1)}
                 className="flex-1 border-2 border-gray-800 text-gray-800 py-4 rounded-md font-bold hover:bg-gray-50 transition-colors"
               >
-                Go Back
+                이전
               </button>
               <button 
                 className="flex-[2] bg-gray-900 text-white py-4 rounded-md font-bold hover:bg-gray-800 transition-colors shadow-lg"
-                onClick={() => alert('Order Placed Successfully!')}
+                onClick={handleOrder}
               >
-                Place Order
+                주문 하기
               </button>
             </div>
           </div>

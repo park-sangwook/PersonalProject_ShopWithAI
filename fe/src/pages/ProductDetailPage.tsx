@@ -151,20 +151,28 @@ const ProductDetailPage: React.FC = () => {
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <label className="w-20 font-medium text-gray-700">색상</label>
-                <select className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option>선택해주세요</option>
-                  <option>블랙</option>
-                  <option>화이트</option>
-                  <option>네이비</option>
+                <select 
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">선택해주세요</option>
+                  <option value="블랙">블랙</option>
+                  <option value="화이트">화이트</option>
+                  <option value="네이비">네이비</option>
                 </select>
               </div>
               <div className="flex items-center gap-4">
                 <label className="w-20 font-medium text-gray-700">사이즈</label>
-                <select className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option>선택해주세요</option>
-                  <option>M (95)</option>
-                  <option>L (100)</option>
-                  <option>XL (105)</option>
+                <select 
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">선택해주세요</option>
+                  <option value="M (95)">M (95)</option>
+                  <option value="L (100)">L (100)</option>
+                  <option value="XL (105)">XL (105)</option>
                 </select>
               </div>
 

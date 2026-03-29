@@ -96,7 +96,11 @@ const CartPage: React.FC = () => {
                          <button onClick={() => handleQuantityChange(item.id || item.productId || product.id, 1, item.quantity || 1)} className="px-3 py-1 hover:bg-gray-50">+</button>
                       </div>
                       <button 
-                        onClick={() => removeMutation.mutate(product.id || product.productId || item.id)}
+                        onClick={() => {
+                          if (window.confirm('장바구니에서 삭제하시겠습니까?')) {
+                            removeMutation.mutate(product.id || product.productId || item.id);
+                          }
+                        }}
                         className="font-medium text-red-600 hover:text-red-500"
                       >
                         Remove
