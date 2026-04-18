@@ -18,6 +18,7 @@ import java.util.List;
 public class RecommendationService {
 
     private final ProductService productService;
+    private final RecommendClientInterface recommendClientInterface;
     public List<ProductImageVO> getRecommendations() {
         RestTemplate restTemplate = new RestTemplate();
         long productId = 1;
@@ -26,8 +27,11 @@ public class RecommendationService {
         log.info("파이썬 추천 서비스 시작 : {}",productId);
         try {
             // 1. 파이썬 서버 호출
-            RecommendResponse response = restTemplate.getForObject(fastapiUrl, RecommendResponse.class);
+//            RecommendResponse response = restTemplate.getForObject(fastapiUrl, RecommendResponse.class);
+
+            RecommendResponse response = recommendClientInterface.getRecommend(productId);
             List<Long> recommendedIds = response.getRecommendations();
+
 
             if (recommendedIds.isEmpty()) return Collections.emptyList();
 

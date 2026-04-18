@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,8 @@ public class ReviewService {
 
     Expression<?>[] reviewEx = {review.user.id,review.product.id,review.content,review.uuidName,review.createdAt,review.updatedAt,review.image,review.rating};
 
-    private final RedisTemplate<String, Object> redisTemplate;
+//    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
     private static final String REVIEW_COUNT_KEY = "prod:stats:";
 
     // 리뷰가 작성될 때 호출되는 메서드
@@ -73,7 +75,7 @@ public class ReviewService {
         Product product = productRepository.getReferenceById(vo.getProductId());
         UserEntity user = userRepository.getReferenceById(vo.getUserId());
         reviewRepository.save(ReviewEntity.toEntity(vo,product,user));
-        applicationEventPublisher.publishEvent(new ReviewPublishEvent(product.getId(),product.getReviewCount(),product.getRating()));
+        applicationEventPublisher.publishEvent(new ReviewPublishEvent(vo));
         log.info("리뷰 저장 완료 : {}",vo);
     }
 

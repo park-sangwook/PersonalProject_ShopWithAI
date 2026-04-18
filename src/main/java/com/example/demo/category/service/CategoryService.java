@@ -28,8 +28,8 @@ public class CategoryService {
      */
     @Transactional(readOnly = true)
     public List<CategoryVO> selectCategoryL(){
-        List<CategoryVO> cte = queryFactory.select(Projections.constructor(CategoryVO.class,category.codeId,category.parent.codeId,category.codeName,category.depth)
-                ).from(category).where(category.depth.eq("1")).fetch();
+        List<CategoryVO> cte = queryFactory.select(Projections.constructor(CategoryVO.class,category.codeId,category.parent.codeId,category.codeName,category.depth))
+                .from(category).where(category.depth.eq("1")).fetch();
         if(cte.isEmpty())throw new CustomException("대분류가 없습니다.");
         return cte;
     }

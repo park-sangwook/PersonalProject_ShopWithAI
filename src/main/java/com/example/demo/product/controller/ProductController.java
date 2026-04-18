@@ -3,12 +3,7 @@ package com.example.demo.product.controller;
 import com.example.demo.common.vo.CustomException;
 import com.example.demo.common.vo.CustomInterface;
 import com.example.demo.common.vo.EnumTest;
-import com.example.demo.product.entity.Product;
-import com.example.demo.product.service.OrderProductService;
-import com.example.demo.product.service.ProductService;
-import com.example.demo.product.service.RecommendationService;
-import com.example.demo.product.service.ReviewService;
-import com.example.demo.product.vo.OrderProductVO;
+import com.example.demo.product.service.*;
 import com.example.demo.product.vo.ProductImageVO;
 import com.example.demo.product.vo.ProductVO;
 import com.example.demo.product.vo.ReviewVO;
@@ -17,6 +12,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,15 +20,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @RestController
 @RequestMapping(value = "/api/product")
@@ -44,10 +39,14 @@ public class ProductController {
     private final ProductService productService;
     private final ReviewService reviewService;
     private final OrderProductService orderProductService;
+    private final RecommendClientInterface recommendClientInterface;
+    private final StringRedisTemplate redisTemplate;
 
     private final ObjectMapper objectMapper;
 
     private final String UPLOAD_PATH = "D:/upload/review";
+
+    private final String KEY_WORD = "prod:search:"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHH"));
 
     /**
     * Fast-API와 ScikitLearn을 활용한 마지막에 구매한 물품을 기준으로 유사한 물품 추천해주는 사용자 맟춤 추천 서비스
@@ -94,6 +93,8 @@ public class ProductController {
      */
     @GetMapping(value = "/search/{productName}")
     public ResponseEntity<?> searchProductName(@PathVariable String productName){
+        redisTemplate.opsForZSet().incrementScore(KEY_WORD,productName,1);
+        redisTemplate.expire(KEY_WORD, Duration.ofHours(1));
         return ResponseEntity.status(HttpStatus.OK).body(productService.selectProductByName(productName));
     }
 
@@ -129,7 +130,6 @@ public class ProductController {
     @PostMapping(value = "/write-review/{productId}")
     public ResponseEntity<?> writeReviewByProductId(@PathVariable Long productId, @ModelAttribute ReviewVO reviewVO, MultipartFile uploadFile){
         log.info("리뷰 파라미터 : {}",reviewVO);
-        log.info("reviewService.insertReview");
         reviewVO.setProductId(productId);
         if(Objects.nonNull(uploadFile)) {
             UUID uuidName = UUID.randomUUID();
@@ -178,5 +178,12 @@ public class ProductController {
             orderProductService.insertOrderProduct(pvo,details.getUsername());
         }
         return ResponseEntity.status(HttpStatus.OK).body("SUCCESS");
+    }
+
+    @GetMapping(value = "/search/recent/keyword")
+    public ResponseEntity<?> recentSearchKeyword(){
+        Set<String> set = redisTemplate.opsForZSet().reverseRange(KEY_WORD,0,5);
+        log.info("최근 검색어 : {}",set);
+        return ResponseEntity.ok(set);
     }
 }

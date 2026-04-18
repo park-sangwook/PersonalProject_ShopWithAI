@@ -23,6 +23,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +38,7 @@ public class ProductService {
     private final QProduct product = QProduct.product;
     private final QProductImage productImage = QProductImage.productImage;
     private final QProductDetail productDetail = QProductDetail.productDetail;
+    private final StringRedisTemplate redisTemplate;
 
     private final JPAQueryFactory queryFactory;
 
@@ -108,12 +110,21 @@ public class ProductService {
     }
 
 
+    /**
+     * 상품 단일 조회
+     * @author : 박상욱
+     * @since : 2026-03-21
+     * @param productId
+     * @return
+     */
     @Transactional(readOnly = true)
     public ProductImageVO selectProductByProductId(long productId){
         ProductImageVO pro = queryFactory.select(Projections.fields(ProductImageVO.class,productFieldsWithImage))
                 .from(product).join(productImage).on(product.id.eq(productImage.productId))
                 .where(product.id.eq(productId)).fetchOne();
         if(Objects.isNull(pro))throw new CustomException("상품 상세정보를 조회할 수 없습니다.");
+        Object obj = redisTemplate.opsForHash().get("prod:"+pro.getId(),"reviewCount");
+        if(Objects.nonNull(obj))pro.setReviewCount((Integer)obj);
         return pro;
     }
 

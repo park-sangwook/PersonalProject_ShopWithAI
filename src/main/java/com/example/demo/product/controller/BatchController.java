@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
@@ -23,7 +24,8 @@ import java.util.stream.IntStream;
 @Slf4j
 @RequiredArgsConstructor
 public class BatchController {
-    private final RedisTemplate<String,Object> redisTemplate;
+//    private final RedisTemplate<String,Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
     private final ReviewService reviewService;
 
 
