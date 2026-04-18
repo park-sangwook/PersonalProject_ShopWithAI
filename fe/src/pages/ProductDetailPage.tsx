@@ -33,7 +33,7 @@ const ProductDetailPage: React.FC = () => {
         name: data.name || data.productName || '프리미엄 코튼 오버핏 셔츠',
         price: data.price !== undefined ? data.price : 50000,
         rating: data.rating || 4.8,
-        reviewCount: data.reviewCount || 128,
+        reviewCount: data.reviewCount || 0,
         categoryL: data.categoryL || data.category_l || '상의',
         categoryS: data.categoryS || data.category_s || '셔츠',
         description: data.description || data.productDesc || '최고급 원단으로 제작되어 부드럽고 착용감이 뛰어납니다. 어떤 스타일에도 잘 어울리는 클래식한 디자인입니다.',

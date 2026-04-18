@@ -73,8 +73,15 @@ apiClient.interceptors.response.use(
     // 1. HTTP 상태 코드가 200번대여도 비즈니스 로직상 'FAILED'인 경우 처리
     if (response && response.data.result === 'FAILED') {
       const errorMsg = response.data.errorMessage || '알 수 없는 오류가 발생했습니다.';
-      alert(errorMsg);
-      window.history.back();
+      
+      // 검색 및 최근검색어 요청인지 확인
+      const isSearchRequest = response.config.url?.includes('/api/product/search') || response.config.url?.includes('/api/product/search/recent/keyword');
+      
+      if (!isSearchRequest) {
+        alert(errorMsg);
+        window.history.back();
+      }
+      
       return Promise.reject(new Error(errorMsg));
     }
     return response;
@@ -93,8 +100,14 @@ apiClient.interceptors.response.use(
 		return Promise.reject(error);
 	}
 
-    if(errorMsg.length>0)alert(errorMsg);
-    window.history.back();
+    // 검색 및 최근검색어 요청인지 확인
+    const isSearchRequest = error.config?.url?.includes('/api/product/search') || error.config?.url?.includes('/api/product/search/recent/keyword');
+    
+    if (!isSearchRequest) {
+      if(errorMsg.length>0) alert(errorMsg);
+      window.history.back();
+    }
+    
     return Promise.reject(error);
   }
 );

@@ -80,17 +80,23 @@ const MainPage: React.FC<{ isAllProducts?: boolean }> = ({ isAllProducts }) => {
   const { data: searchResults = [], isLoading: isSearchLoading } = useQuery({
     queryKey: ['searchResults', query],
     queryFn: async () => {
-      if (!query) return [];
-      const decodedQuery = decodeURIComponent(query);
-      const response = await apiClient.get(`/api/product/search/${decodedQuery}`);
-      let data = response.data || [];
-      if (data.data) data = data.data;
-      if (data.products) data = data.products;
-      if (data.content) data = data.content;
-      return Array.isArray(data) ? data : (data ? [data] : []);
+      try {
+        if (!query) return [];
+        const decodedQuery = decodeURIComponent(query);
+        const response = await apiClient.get(`/api/product/search/${decodedQuery}`);
+        let data = response.data || [];
+        if (data.data) data = data.data;
+        if (data.products) data = data.products;
+        if (data.content) data = data.content;
+        return Array.isArray(data) ? data : (data ? [data] : []);
+      } catch (err) {
+        // 검색 결과가 없는 경우(API에서 에러 처리된 경우) 빈 배열 반환
+        return [];
+      }
     },
     enabled: !!query,
     staleTime: 1000 * 60 * 10,
+    retry: false,
   });
 
   // 카테고리 상품 페칭

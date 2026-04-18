@@ -32,6 +32,7 @@ function App() {
   const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showRecent, setShowRecent] = useState(false);
 
   useEffect(() => {
     if (location.pathname.startsWith('/search/')) {
@@ -53,10 +54,32 @@ function App() {
     staleTime: 1000 * 60 * 10, // 10 minutes cache
   });
 
+  const { data: recentKeywords = [], refetch: refetchRecent } = useQuery({
+    queryKey: ['recentKeywords'],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get('/api/product/search/recent/keyword');
+        let data = response.data || [];
+        if (data.data) data = data.data;
+        return Array.isArray(data) ? data.slice(0, 10) : [];
+      } catch (err) {
+        console.error('Failed to fetch recent keywords:', err);
+        return [];
+      }
+    },
+    staleTime: 0,
+  });
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search/${searchQuery.trim()}`);
+      // 검색어 저장 및 최근 검색어 목록 갱신을 위해 검색 API 명시적 호출
+      apiClient.get(`/api/product/search/${encodeURIComponent(searchQuery.trim())}`)
+        .then(() => refetchRecent())
+        .catch(err => console.error('Failed to save search keyword:', err));
+
+      navigate(`/search/${encodeURIComponent(searchQuery.trim())}`);
+      setShowRecent(false);
     }
   };
 
@@ -80,20 +103,72 @@ function App() {
                     ))}
                   </div>
                 </div>
-                <form onSubmit={handleSearch} className="w-full max-w-sm">
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="Search for products..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border-gray-200" 
-                    />
-                    <button type="submit" className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
-                    </button>
-                  </div>
-                </form>
+                <div className="w-full max-w-sm relative">
+                  <form onSubmit={handleSearch} className="w-full">
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        placeholder="Search for products..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => {
+                          setShowRecent(true);
+                          refetchRecent();
+                        }}
+                        onBlur={() => setTimeout(() => setShowRecent(false), 200)}
+                        className="w-full pl-4 pr-10 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border-gray-200" 
+                      />
+                      <button type="submit" className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-600">
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
+                      </button>
+                    </div>
+                  </form>
+
+                  {showRecent && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-[60] overflow-hidden">
+                      <div className="p-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">최근 검색어</span>
+                        <button 
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => setShowRecent(false)}
+                          className="text-[10px] text-gray-400 hover:text-gray-600 font-bold uppercase"
+                        >Close</button>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {recentKeywords.length > 0 ? (
+                          <ul className="py-1">
+                            {recentKeywords.map((keyword: string, index: number) => (
+                              <li key={index}>
+                                <button
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3 group"
+                                  onClick={() => {
+                                    setSearchQuery(keyword);
+                                    // 검색어 순서 갱신을 위해 검색 API 명시적 호출
+                                    apiClient.get(`/api/product/search/${encodeURIComponent(keyword)}`)
+                                      .then(() => refetchRecent())
+                                      .catch(err => console.error('Failed to update search keyword order:', err));
+                                      
+                                    navigate(`/search/${encodeURIComponent(keyword)}`);
+                                    setShowRecent(false);
+                                  }}
+                                >
+                                  <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                  {keyword}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="py-10 px-4 text-center">
+                            <svg className="w-8 h-8 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <p className="text-sm text-gray-400">최근검색어가 없습니다.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             {isAdminRoute && (
