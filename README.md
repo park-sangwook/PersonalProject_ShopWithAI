@@ -37,13 +37,45 @@
 * **State Management:** **TanStack Query (React Query)**
 * **Development Tool:** `gemini-cli`
 
+
+### DevOps & Infra
+* **OS:** **Rocky Linux 9**
+* **Container:** **Docker**, Docker Compose
+* **Web Server:** Nginx (Reverse Proxy)
+* **SSL:** Let's Encrypt (HTTPS 적용)
 ---
 
 ## 🏗 시스템 아키텍처 (Architecture)
-
 ```mermaid
 graph TD
-    User[사용자] <--> React[React Frontend]
-    React <--> Spring[Spring Boot API Server]
-    Spring <--> DB[(MariaDB)]
-    Spring -- RestTemplate --> FastAPI[FastAPI Recommendation Engine]
+    subgraph "External"
+        User["사용자 (Client)"]
+        Internet(("HTTPS (SSL)"))
+    end
+
+    subgraph "Docker Container (Rocky Linux 9)"
+        Nginx["Nginx (Reverse Proxy)"]
+        
+        subgraph "Frontend"
+            React["React App"]
+        end
+
+        subgraph "Backend Services"
+            Spring["Spring Boot API"]
+            FastAPI["FastAPI Engine"]
+        end
+
+        subgraph "Storage"
+            DB[("MariaDB")]
+            Redis[("Redis")]
+        end
+    end
+
+    User <--> Internet <--> Nginx
+    Nginx <--> React
+    React <--> Spring
+    Spring <--> DB
+    Spring <--> Redis
+    
+    %% FeignClient를 이용한 MSA 통신 강조
+    Spring -- "Spring Cloud OpenFeign" --> FastAPI
